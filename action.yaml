@@ -1,0 +1,22 @@
+name: 'Artifactory Deploy'
+description: 'Deploy artifacts to Artifactory'
+inputs:
+  uri:
+    description: 'URI of the Artifactory server'
+    required: true
+  username:
+    description: 'Artifactory username'
+    required: true
+  password:
+    description: 'Artifactory password'
+    required: true
+  build-name:
+    description: 'Name of the build'
+    required: true
+  repository:
+    description: 'Artifactory repository to which the artifacts should be deployed'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - ${{ inputs.who-to-greet }}
