@@ -19,4 +19,8 @@ runs:
   using: 'docker'
   image: 'Dockerfile'
   args:
-    - ${{ inputs.who-to-greet }}
+    - --artifactory.uri=${{ inputs.uri }}
+    - --artifactory.username=${{ inputs.username }}
+    - --artifactory.password=${{ inputs.password }}
+    - --artifactory.build-name=${{ inputs.build-name }}
+    - --artifactory.repository=${{ inputs.repository }}
