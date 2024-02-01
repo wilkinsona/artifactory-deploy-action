@@ -1,0 +1,18 @@
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    name: Test action
+    steps:
+      - name: Check out action
+        uses: actions/checkout@v4
+      - name: Run action
+        uses: ./
+        id: run
+        with:
+          uri: 'repo.example.com'
+          username: 'alice'
+          password: 'secret'
+          build-name: ${{github.action}}
+          repository: 'libs-snapshot-local'
