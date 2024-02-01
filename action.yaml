@@ -10,11 +10,15 @@ inputs:
   password:
     description: 'Artifactory password'
     required: true
+  repository:
+    description: 'Artifactory repository to which the artifacts should be deployed'
   build-name:
     description: 'Name of the build'
     required: true
-  repository:
-    description: 'Artifactory repository to which the artifacts should be deployed'
+  build-number:
+    description: 'Number of the build'
+    required: true
+    default: ${{ github.run_number }}
 runs:
   using: 'docker'
   image: 'Dockerfile'
@@ -24,3 +28,4 @@ runs:
     - --artifactory.password=${{ inputs.password }}
     - --artifactory.build-name=${{ inputs.build-name }}
     - --artifactory.repository=${{ inputs.repository }}
+    - --artifactory.build-number=${{ inputs.build-number }}
