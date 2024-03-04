@@ -1,0 +1,8 @@
+{
+	"uri": "https://repo.example.com",
+	"username": "admin",
+	"password": "password",
+	"build_name": "my-build",
+	"check_limit": 1,
+	"build_number_prefix": "main-"
+}

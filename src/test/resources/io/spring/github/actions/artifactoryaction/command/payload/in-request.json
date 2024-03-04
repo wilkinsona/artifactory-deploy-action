@@ -1,0 +1,19 @@
+{
+	"source": {
+		"uri": "https://repo.example.com",
+		"username": "admin",
+		"password": "password",
+		"build_name": "my-build"
+	},
+	"version": {
+		"build_number": "5678",
+		"created": "2022-11-20T23:33:54.279Z"
+	},
+	"params": {
+		"generate_maven_metadata": false,
+		"save_build_info": true,
+		"download_artifacts": false,
+		"download_checksums": false,
+		"threads": 8
+	}
+}

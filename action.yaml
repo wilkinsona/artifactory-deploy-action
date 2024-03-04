@@ -40,14 +40,14 @@ runs:
   using: 'docker'
   image: 'Dockerfile'
   args:
-    - --artifactory.uri=${{ inputs.uri }}
-    - --artifactory.username=${{ inputs.username }}
-    - --artifactory.password=${{ inputs.password }}
-    - --artifactory.build-name=${{ inputs.build-name }}
-    - --artifactory.build-number=${{ inputs.build-number }}
-    - --artifactory.build-uri=${{ inputs.build-uri }}
-    - --artifactory.folder=${{ inputs.folder }}
-    - --artifactory.repository=${{ inputs.repository }}
-    - --artifactory.threads=${{ inputs.threads }}
+    - --artifactory.server.uri=${{ inputs.uri }}
+    - --artifactory.server.username=${{ inputs.username }}
+    - --artifactory.server.password=${{ inputs.password }}
+    - --artifactory.deploy.build.name=${{ inputs.build-name }}
+    - --artifactory.deploy.build.number=${{ inputs.build-number }}
+    - --artifactory.deploy.build.uri=${{ inputs.build-uri }}
+    - --artifactory.deploy.folder=${{ inputs.folder }}
+    - --artifactory.deploy.repository=${{ inputs.repository }}
+    - --artifactory.deploy.threads=${{ inputs.threads }}
     - --signing.key=${{ inputs.signing-key}}
     - --signing.passphase=${{ inputs.signing-passphrase }}

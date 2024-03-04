@@ -1,6 +1,7 @@
 FROM gradle:8.5.0-jdk21-alpine as build
 COPY src /app/src/
-COPY build.gradle settings.gradle /app/
+COPY config /app/config/
+COPY build.gradle settings.gradle gradle.properties /app/
 RUN cd /app && gradle bootJar
 
 FROM ghcr.io/bell-sw/liberica-openjdk-debian:21.0.2-14
