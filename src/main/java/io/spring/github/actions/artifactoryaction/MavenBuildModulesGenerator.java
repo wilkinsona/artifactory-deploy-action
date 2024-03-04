@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.spring.github.actions.artifactoryaction.maven;
+package io.spring.github.actions.artifactoryaction;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,7 +28,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import io.spring.github.actions.artifactoryaction.artifactory.BuildModulesGenerator;
 import io.spring.github.actions.artifactoryaction.artifactory.payload.BuildArtifact;
 import io.spring.github.actions.artifactoryaction.artifactory.payload.BuildModule;
 import io.spring.github.actions.artifactoryaction.artifactory.payload.Checksums;
@@ -40,12 +39,13 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 
 /**
- * {@link BuildModulesGenerator} that using standard Maven layout rules.
+ * Generates {@link BuildModule build modules} using standard Maven layout rules.
  *
  * @author Phillip Webb
  * @author Madhura Bhave
+ * @author Andy Wilkinson
  */
-public class MavenBuildModulesGenerator implements BuildModulesGenerator {
+class MavenBuildModulesGenerator {
 
 	private static final Map<String, String> SUFFIX_TYPES;
 
@@ -60,8 +60,7 @@ public class MavenBuildModulesGenerator implements BuildModulesGenerator {
 
 	private static Pattern PATH_PATTERN = Pattern.compile("\\/(.*)\\/(.*)\\/(.*)\\/(.*)");
 
-	@Override
-	public List<BuildModule> getBuildModules(List<DeployableArtifact> deployableArtifacts) {
+	List<BuildModule> getBuildModules(List<DeployableArtifact> deployableArtifacts) {
 		List<BuildModule> buildModules = new ArrayList<>();
 		getBuildArtifactsById(deployableArtifacts)
 			.forEach((id, artifacts) -> buildModules.add(new BuildModule(id, artifacts)));

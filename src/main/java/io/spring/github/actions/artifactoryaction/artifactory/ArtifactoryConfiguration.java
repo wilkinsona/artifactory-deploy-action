@@ -14,28 +14,26 @@
  * limitations under the License.
  */
 
-package io.spring.github.actions.artifactoryaction;
+package io.spring.github.actions.artifactoryaction.artifactory;
 
-import io.spring.github.actions.artifactoryaction.artifactory.ArtifactoryProperties;
-
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 /**
- * Main Application entry point.
+ * {@link Configuration} for Artifactory-related classes.
  *
- * @author Phillip Webb
  * @author Andy Wilkinson
  */
-@SpringBootApplication
 @EnableConfigurationProperties(ArtifactoryProperties.class)
-public class Application {
+@Configuration(proxyBeanMethods = false)
+class ArtifactoryConfiguration {
 
-	public static void main(String[] args) {
-		ConfigurableApplicationContext app = SpringApplication.run(Application.class, args);
-		app.getBean(Deployer.class).deploy();
+	@Bean
+	Artifactory artifactory(ArtifactoryProperties properties, RestTemplateBuilder restTemplateBuilder) {
+		return new HttpArtifactory(restTemplateBuilder, properties.server().uri(), properties.server().username(),
+				properties.server().password());
 	}
 
 }

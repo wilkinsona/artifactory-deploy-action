@@ -2,17 +2,13 @@
 	"name": "my-build",
 	"number": "5678",
 	"agent": {
-		"name": "Concourse",
-		"version": "3.0.0"
+		"name": "GitHub Actions"
 	},
 	"buildAgent": {
-		"name": "Artifactory Resource"
+		"name": "Artifactory Action"
 	},
 	"started": "2014-09-30T12:00:19.893Z",
 	"url": "https://ci.example.com",
-	"properties": {
-		"made-by": "concourse"
-	},
 	"modules": [{
 		"id": "com.example.module:my-module:1.0.0-SNAPSHOT",
 		"artifacts": [{

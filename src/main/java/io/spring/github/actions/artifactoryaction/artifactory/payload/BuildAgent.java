@@ -18,32 +18,20 @@ package io.spring.github.actions.artifactoryaction.artifactory.payload;
 
 import java.util.Objects;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import org.springframework.util.Assert;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 /**
  * The build agent information included in {@link BuildInfo}.
  *
  * @author Andy Wilkinson
  */
+@JsonInclude(Include.NON_NULL)
 public class BuildAgent {
 
-	private final String name;
+	private final String name = "Artifactory Action";
 
-	private final String version;
-
-	public BuildAgent() {
-		this("Artifactory Resource", BuildAgent.class.getPackage().getImplementationVersion());
-	}
-
-	@JsonCreator
-	public BuildAgent(@JsonProperty("name") String name, @JsonProperty("version") String version) {
-		Assert.hasText(name, "Name must not be empty");
-		this.name = name;
-		this.version = version;
-	}
+	private final String version = BuildAgent.class.getPackage().getImplementationVersion();
 
 	public String getName() {
 		return this.name;

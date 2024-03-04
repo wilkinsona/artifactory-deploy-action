@@ -18,8 +18,8 @@ package io.spring.github.actions.artifactoryaction.artifactory.payload;
 
 import java.util.Objects;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 import org.springframework.util.Assert;
 
@@ -28,7 +28,9 @@ import org.springframework.util.Assert;
  *
  * @author Phillip Webb
  * @author Madhura Bhave
+ * @author Andy Wilkinson
  */
+@JsonInclude(Include.NON_NULL)
 public class ContinuousIntegrationAgent {
 
 	private final String name;
@@ -36,11 +38,10 @@ public class ContinuousIntegrationAgent {
 	private final String version;
 
 	public ContinuousIntegrationAgent() {
-		this("Concourse", null);
+		this("GitHub Actions", null);
 	}
 
-	@JsonCreator
-	public ContinuousIntegrationAgent(@JsonProperty("name") String name, @JsonProperty("version") String version) {
+	private ContinuousIntegrationAgent(String name, String version) {
 		Assert.hasText(name, "Name must not be empty");
 		this.name = name;
 		this.version = version;

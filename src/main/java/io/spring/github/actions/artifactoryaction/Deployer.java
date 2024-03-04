@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.spring.github.actions.artifactoryaction.command;
+package io.spring.github.actions.artifactoryaction;
 
 import java.io.File;
 import java.time.Instant;
@@ -33,20 +33,16 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import io.spring.github.actions.artifactoryaction.ArtifactoryProperties;
 import io.spring.github.actions.artifactoryaction.artifactory.Artifactory;
-import io.spring.github.actions.artifactoryaction.artifactory.ArtifactoryRepository;
-import io.spring.github.actions.artifactoryaction.artifactory.ArtifactoryServer;
+import io.spring.github.actions.artifactoryaction.artifactory.Artifactory.BuildRun;
+import io.spring.github.actions.artifactoryaction.artifactory.ArtifactoryProperties;
 import io.spring.github.actions.artifactoryaction.artifactory.DeployOption;
 import io.spring.github.actions.artifactoryaction.artifactory.payload.BuildModule;
-import io.spring.github.actions.artifactoryaction.artifactory.payload.ContinuousIntegrationAgent;
 import io.spring.github.actions.artifactoryaction.artifactory.payload.DeployableArtifact;
 import io.spring.github.actions.artifactoryaction.artifactory.payload.DeployableFileArtifact;
-import io.spring.github.actions.artifactoryaction.io.Directory;
 import io.spring.github.actions.artifactoryaction.io.DirectoryScanner;
 import io.spring.github.actions.artifactoryaction.io.FileSet;
 import io.spring.github.actions.artifactoryaction.io.FileSet.Category;
-import io.spring.github.actions.artifactoryaction.maven.MavenBuildModulesGenerator;
 import io.spring.github.actions.artifactoryaction.system.ConsoleLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +53,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 /**
- * Handler for deploying to Artifactory.
+ * Deployer for deploying to Artifactory.
  *
  * @author Phillip Webb
  * @author Madhura Bhave
@@ -65,14 +61,14 @@ import org.springframework.util.MultiValueMap;
  * @author Andy Wilkinson
  */
 @Component
-public class DeployHandler {
+public class Deployer {
 
 	private static final Set<String> CHECKSUM_FILE_EXTENSIONS = Collections
 		.unmodifiableSet(new HashSet<>(Arrays.asList(".md5", ".sha1", ".sha256", ".sha512")));
 
 	private static final DeployOption[] NO_DEPLOY_OPTIONS = {};
 
-	private static final Logger logger = LoggerFactory.getLogger(DeployHandler.class);
+	private static final Logger logger = LoggerFactory.getLogger(Deployer.class);
 
 	private static final ConsoleLogger console = new ConsoleLogger();
 
@@ -82,45 +78,35 @@ public class DeployHandler {
 
 	private final DirectoryScanner directoryScanner;
 
-	public DeployHandler(ArtifactoryProperties properties, Artifactory artifactory, DirectoryScanner directoryScanner) {
+	public Deployer(ArtifactoryProperties properties, Artifactory artifactory, DirectoryScanner directoryScanner) {
 		this.properties = properties;
 		this.artifactory = artifactory;
 		this.directoryScanner = directoryScanner;
 	}
 
-	public void handle(Directory directory) {
-		Assert.state(!directory.isEmpty(), "No artifacts found in empty directory");
+	public void deploy() {
 		Instant started = Instant.now();
-		ArtifactoryServer artifactoryServer = getArtifactoryServer();
 		MultiValueMap<Category, DeployableArtifact> batchedArtifacts = getBatchedArtifacts(
-				this.properties.deploy().build().number(), started, directory);
+				this.properties.deploy().build().number(), started);
 		int size = batchedArtifacts.values().stream().mapToInt(List::size).sum();
 		Assert.state(size > 0, "No artifacts found to deploy");
-		console.log("Deploying {} artifacts to {} as build {} using {} thread(s)", size, this.properties.server().uri(),
+		console.log("Deploying {} artifacts to {} as {} build {} using {} thread(s)", size,
+				this.properties.server().uri(), this.properties.deploy().build().name(),
 				this.properties.deploy().build().number(), this.properties.deploy().threads());
-		deployArtifacts(artifactoryServer, batchedArtifacts);
-		addBuildRun(artifactoryServer, this.properties.deploy().build().number(), started, batchedArtifacts);
+		deployArtifacts(batchedArtifacts);
+		addBuildRun(this.properties.deploy().build().number(), started, batchedArtifacts);
 		logger.debug("Done");
 	}
 
-	private ArtifactoryServer getArtifactoryServer() {
-		logger.debug("Using artifactory server " + this.properties.server().uri());
-		return this.artifactory.server(this.properties.server().uri(), this.properties.server().username(),
-				this.properties.server().password());
-	}
-
-	private MultiValueMap<Category, DeployableArtifact> getBatchedArtifacts(int buildNumber, Instant started,
-			Directory directory) {
-		Directory root = directory.getSubDirectory(this.properties.deploy().folder());
+	private MultiValueMap<Category, DeployableArtifact> getBatchedArtifacts(int buildNumber, Instant started) {
+		File root = new File(this.properties.deploy().folder());
 		logger.debug("Getting deployable artifacts from {}", root);
-		FileSet fileSet = this.directoryScanner.scan(root, Collections.emptyList(), Collections.emptyList())
-			.filter(getChecksumFilter())
-			.filter(getMetadataFilter());
+		FileSet fileSet = this.directoryScanner.scan(root).filter(getChecksumFilter()).filter(getMetadataFilter());
 		MultiValueMap<Category, DeployableArtifact> batchedArtifacts = new LinkedMultiValueMap<>();
 		Set<String> paths = new HashSet<>();
 		fileSet.batchedByCategory().forEach((category, files) -> {
 			files.forEach((file) -> {
-				String path = DeployableFileArtifact.calculatePath(root.getFile(), file);
+				String path = DeployableFileArtifact.calculatePath(root, file);
 				logger.debug("Including file {} with path {}", file, path);
 				Map<String, String> properties = getDeployableArtifactProperties(path, buildNumber, started);
 				if (paths.add(path)) {
@@ -151,15 +137,12 @@ public class DeployHandler {
 		properties.put("build.timestamp", Long.toString(started.toEpochMilli()));
 	}
 
-	private void deployArtifacts(ArtifactoryServer artifactoryServer,
-			MultiValueMap<Category, DeployableArtifact> batchedArtifacts) {
+	private void deployArtifacts(MultiValueMap<Category, DeployableArtifact> batchedArtifacts) {
 		logger.debug("Deploying artifacts to {}", this.properties.deploy().repository());
-		ArtifactoryRepository artifactoryRepository = artifactoryServer
-			.repository(this.properties.deploy().repository());
 		DeployOption[] options = NO_DEPLOY_OPTIONS;
 		ExecutorService executor = Executors.newFixedThreadPool(this.properties.deploy().threads());
 		Function<DeployableArtifact, CompletableFuture<?>> deployer = (deployableArtifact) -> getArtifactDeployer(
-				artifactoryRepository, options, deployableArtifact);
+				options, deployableArtifact);
 		try {
 			batchedArtifacts.forEach((category, artifacts) -> deploy(category, artifacts, deployer));
 		}
@@ -186,16 +169,14 @@ public class DeployHandler {
 		}
 	}
 
-	private CompletableFuture<?> getArtifactDeployer(ArtifactoryRepository artifactoryRepository,
-			DeployOption[] options, DeployableArtifact deployableArtifact) {
-		return CompletableFuture.runAsync(() -> deployArtifact(artifactoryRepository, deployableArtifact, options));
+	private CompletableFuture<?> getArtifactDeployer(DeployOption[] options, DeployableArtifact deployableArtifact) {
+		return CompletableFuture.runAsync(() -> deployArtifact(deployableArtifact, options));
 	}
 
-	private void deployArtifact(ArtifactoryRepository artifactoryRepository, DeployableArtifact deployableArtifact,
-			DeployOption[] options) {
+	private void deployArtifact(DeployableArtifact deployableArtifact, DeployOption[] options) {
 		console.log("Deploying {} {} ({}/{})", deployableArtifact.getPath(), deployableArtifact.getProperties(),
 				deployableArtifact.getChecksums().getSha1(), deployableArtifact.getChecksums().getMd5());
-		artifactoryRepository.deploy(deployableArtifact, options);
+		this.artifactory.deploy(this.properties.deploy().repository(), deployableArtifact, options);
 	}
 
 	private Predicate<File> getMetadataFilter() {
@@ -214,7 +195,7 @@ public class DeployHandler {
 		};
 	}
 
-	private void addBuildRun(ArtifactoryServer artifactoryServer, int buildNumber, Instant started,
+	private void addBuildRun(int buildNumber, Instant started,
 			MultiValueMap<Category, DeployableArtifact> batchedArtifacts) {
 		List<DeployableArtifact> artifacts = batchedArtifacts.values()
 			.stream()
@@ -222,10 +203,8 @@ public class DeployHandler {
 			.collect(Collectors.toList());
 		logger.debug("Adding build run {}", buildNumber);
 		List<BuildModule> modules = new MavenBuildModulesGenerator().getBuildModules(artifacts);
-		// TODO projects
-		artifactoryServer.buildRuns(this.properties.deploy().build().name(), (String) null)
-			.add(buildNumber, new ContinuousIntegrationAgent(), started, this.properties.deploy().build().uri(), null,
-					modules);
+		this.artifactory.addBuildRun(this.properties.deploy().project(), this.properties.deploy().build().name(),
+				new BuildRun(buildNumber, started, this.properties.deploy().build().uri(), modules));
 	}
 
 }

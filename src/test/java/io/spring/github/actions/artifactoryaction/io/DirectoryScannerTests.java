@@ -18,7 +18,6 @@ package io.spring.github.actions.artifactoryaction.io;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -33,6 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author Phillip Webb
  * @author Madhura Bhave
+ * @author Andy Wilkinson
  */
 class DirectoryScannerTests {
 
@@ -44,50 +44,20 @@ class DirectoryScannerTests {
 	private DirectoryScanner scanner = new DirectoryScanner();
 
 	@Test
-	void scanWhenNoIncludeExcludeReturnsAllFiles() throws Exception {
-		Directory directory = createFiles();
-		FileSet files = this.scanner.scan(directory, Collections.emptyList(), Collections.emptyList());
-		assertThat(files).extracting((f) -> relativePath(directory, f))
+	void scanFindsAllFiles() throws Exception {
+		File root = createFiles();
+		FileSet files = this.scanner.scan(root);
+		assertThat(files).extracting((f) -> relativePath(root, f))
 			.containsExactly("/bar/bar.jar", "/bar/bar.pom", "/baz/baz.jar", "/baz/baz.pom");
 	}
 
-	@Test
-	void scanWhenUsingIncludesFiltersFiles() throws Exception {
-		Directory directory = createFiles();
-		FileSet files = this.scanner.scan(directory, Collections.singletonList("**/*.jar"), Collections.emptyList());
-		assertThat(files).extracting((f) -> relativePath(directory, f)).containsExactly("/bar/bar.jar", "/baz/baz.jar");
-	}
-
-	@Test
-	void scanWhenUsingExcludesFiltersFiles() throws Exception {
-		Directory directory = createFiles();
-		FileSet files = this.scanner.scan(directory, Collections.emptyList(), Collections.singletonList("**/*.jar"));
-		assertThat(files).extracting((f) -> relativePath(directory, f)).containsExactly("/bar/bar.pom", "/baz/baz.pom");
-	}
-
-	@Test
-	void scanWhenUsingIncludesAndExcludesFiltersFiles() throws Exception {
-		Directory directory = createFiles();
-		FileSet files = this.scanner.scan(directory, Collections.singletonList("**/*.jar"),
-				Collections.singletonList("**/baz.*"));
-		assertThat(files).extracting((f) -> relativePath(directory, f)).containsExactly("/bar/bar.jar");
-	}
-
-	@Test
-	void scanWhenUsingSlashPrefixFiltersFiles() throws IOException {
-		Directory directory = createFiles();
-		FileSet files = this.scanner.scan(directory, Collections.singletonList("/**/*.jar"),
-				Collections.singletonList("/**/baz.*"));
-		assertThat(files).extracting((f) -> relativePath(directory, f)).containsExactly("/bar/bar.jar");
-	}
-
-	private String relativePath(Directory directory, File file) {
-		String root = StringUtils.cleanPath(directory.getFile().getPath());
+	private String relativePath(File rootFile, File file) {
+		String root = StringUtils.cleanPath(rootFile.getPath());
 		String path = StringUtils.cleanPath(file.getPath());
 		return path.substring(root.length());
 	}
 
-	private Directory createFiles() throws IOException {
+	private File createFiles() throws IOException {
 		File root = this.tempDir;
 		File barDir = new File(root, "bar");
 		touch(new File(barDir, "bar.jar"));
@@ -95,7 +65,7 @@ class DirectoryScannerTests {
 		File bazDir = new File(root, "baz");
 		touch(new File(bazDir, "baz.jar"));
 		touch(new File(bazDir, "baz.pom"));
-		return new Directory(root);
+		return root;
 	}
 
 	private void touch(File file) throws IOException {

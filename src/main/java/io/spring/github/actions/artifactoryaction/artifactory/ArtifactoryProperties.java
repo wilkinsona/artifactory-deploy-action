@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package io.spring.github.actions.artifactoryaction;
+package io.spring.github.actions.artifactoryaction.artifactory;
 
 import java.net.URI;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
+import org.springframework.util.Assert;
 
 /**
  * Configuration properties for deploying to Artifactory.
@@ -34,12 +35,36 @@ public record ArtifactoryProperties(@DefaultValue ArtifactoryProperties.Server s
 
 	public record Server(URI uri, String username, String password) {
 
+		public Server(URI uri, String username, String password) {
+			Assert.notNull(uri, "artifactory.server.uri is required");
+			this.uri = uri;
+			this.username = username;
+			this.password = password;
+		}
+
 	}
 
-	public record Deploy(String folder, String repository, @DefaultValue("1") int threads,
-			@DefaultValue Deploy.Build build) {
+	public record Deploy(String project, String folder, String repository, int threads, Deploy.Build build) {
+
+		public Deploy(String project, String folder, String repository, @DefaultValue("1") int threads,
+				@DefaultValue Deploy.Build build) {
+			Assert.hasText(folder, "artifactory.deploy.folder is required");
+			Assert.hasText(repository, "artifactory.deploy.repository is required");
+			this.project = project;
+			this.folder = folder;
+			this.repository = repository;
+			this.threads = threads;
+			this.build = build;
+		}
 
 		public record Build(String name, int number, URI uri) {
+
+			public Build(String name, int number, URI uri) {
+				Assert.hasText(name, "artifactory.deploy.build.name is required");
+				this.name = name;
+				this.number = number;
+				this.uri = uri;
+			}
 
 		}
 

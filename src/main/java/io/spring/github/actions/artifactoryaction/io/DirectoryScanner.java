@@ -20,16 +20,11 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Collections;
-import java.util.List;
-import java.util.function.BiPredicate;
 
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 /**
- * Utility to scan a {@link Directory} for contents.
+ * Utility to scan a directory for contents.
  *
  * @author Phillip Webb
  * @author Madhura Bhave
@@ -41,44 +36,18 @@ public class DirectoryScanner {
 	 * Scan the given directory for files, accounting for the include and exclude
 	 * patterns.
 	 * @param directory the source directory
-	 * @param include the include patterns
-	 * @return the scanned list of files
+	 * @return the scanned set of files
 	 */
-	public FileSet scan(Directory directory, List<String> include) {
-		return this.scan(directory, include, Collections.emptyList());
-	}
-
-	/**
-	 * Scan the given directory for files, accounting for the include and exclude
-	 * patterns.
-	 * @param directory the source directory
-	 * @param include the include patterns
-	 * @param exclude the exclude patterns
-	 * @return the scanned list of files
-	 */
-	public FileSet scan(Directory directory, List<String> include, List<String> exclude) {
+	public FileSet scan(File directory) {
 		try {
-			Path path = directory.getFile().toPath();
-			return FileSet.of(Files.find(path, Integer.MAX_VALUE, getFilter(directory, include, exclude))
+			return FileSet.of(Files
+				.find(directory.toPath(), Integer.MAX_VALUE, (path, fileAttributes) -> Files.isRegularFile(path))
 				.map(Path::toFile)
 				.toArray(File[]::new));
 		}
 		catch (IOException ex) {
 			throw new IllegalStateException(ex);
 		}
-	}
-
-	private BiPredicate<Path, BasicFileAttributes> getFilter(Directory root, List<String> include,
-			List<String> exclude) {
-		PathFilter filter = new PathFilter(include, exclude);
-		String rootPath = StringUtils.cleanPath(root.getFile().getPath());
-		return (path, fileAttributes) -> {
-			if (!path.toFile().isFile()) {
-				return false;
-			}
-			String relativePath = StringUtils.cleanPath(path.toString()).substring(rootPath.length() + 1);
-			return filter.isMatch(relativePath);
-		};
 	}
 
 }

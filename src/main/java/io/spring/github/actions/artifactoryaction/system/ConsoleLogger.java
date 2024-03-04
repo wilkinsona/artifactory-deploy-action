@@ -26,7 +26,7 @@ import org.slf4j.helpers.MessageFormatter;
 public class ConsoleLogger {
 
 	public void log(String message, Object... args) {
-		System.err.println(MessageFormatter.arrayFormat(message, args).getMessage());
+		System.out.println(MessageFormatter.arrayFormat(message, args).getMessage());
 	}
 
 }

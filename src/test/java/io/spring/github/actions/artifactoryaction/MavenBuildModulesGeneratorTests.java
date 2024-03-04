@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.spring.github.actions.artifactoryaction.maven;
+package io.spring.github.actions.artifactoryaction;
 
 import java.util.ArrayList;
 import java.util.List;

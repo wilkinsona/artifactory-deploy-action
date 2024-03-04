@@ -17,24 +17,51 @@
 package io.spring.github.actions.artifactoryaction.artifactory;
 
 import java.net.URI;
+import java.time.Instant;
+import java.util.List;
+
+import io.spring.github.actions.artifactoryaction.artifactory.payload.BuildModule;
+import io.spring.github.actions.artifactoryaction.artifactory.payload.DeployableArtifact;
 
 /**
- * Interface providing access to Artifactory.
+ * Provides access to Artifactory.
  *
  * @author Phillip Webb
  * @author Madhura Bhave
  * @author Gabriel Petrovay
+ * @author Andy Wilkinson
  * @see HttpArtifactory
  */
 public interface Artifactory {
 
 	/**
-	 * Return an {@link ArtifactoryServer} for the specified connection details.
-	 * @param uri the server URI
-	 * @param username the connection username
-	 * @param password the connection password
-	 * @return an {@link ArtifactoryServer}
+	 * Deploy the specified artifact to the repository.
+	 * @param repository the name of the repository
+	 * @param artifact the artifact to deploy
+	 * @param options any deploy options
 	 */
-	ArtifactoryServer server(URI uri, String username, String password);
+	void deploy(String repository, DeployableArtifact artifact, DeployOption... options);
+
+	/**
+	 * Adds a build run.
+	 * @param project the name of the project, if any, that should store the build run's
+	 * info
+	 * @param buildName the name of the build
+	 * @param buildRun the build run to add
+	 */
+	void addBuildRun(String project, String buildName, BuildRun buildRun);
+
+	/**
+	 * A build run.
+	 *
+	 * @param number the number of the build
+	 * @param started the instant at which the build started
+	 * @param uri the URI of the build, typically on a CI server
+	 * @param modules the modules produced by the build
+	 *
+	 */
+	record BuildRun(int number, Instant started, URI uri, List<BuildModule> modules) {
+
+	}
 
 }
