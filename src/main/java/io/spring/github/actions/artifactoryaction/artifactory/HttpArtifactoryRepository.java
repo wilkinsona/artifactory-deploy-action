@@ -16,21 +16,16 @@
 
 package io.spring.github.actions.artifactoryaction.artifactory;
 
-import java.io.File;
 import java.net.SocketException;
 import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Map;
 
 import io.spring.github.actions.artifactoryaction.artifactory.payload.Checksums;
 import io.spring.github.actions.artifactoryaction.artifactory.payload.DeployableArtifact;
-import io.spring.github.actions.artifactoryaction.io.Checksum;
 import io.spring.github.actions.artifactoryaction.system.ConsoleLogger;
 
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
@@ -40,7 +35,6 @@ import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
@@ -54,6 +48,8 @@ import org.springframework.web.util.UriComponentsBuilder;
  */
 public class HttpArtifactoryRepository implements ArtifactoryRepository {
 
+	private static final Duration RETRY_DELAY = Duration.ofSeconds(5);
+
 	private static final ConsoleLogger console = new ConsoleLogger();
 
 	private static final int KB = 1024;
@@ -62,18 +58,14 @@ public class HttpArtifactoryRepository implements ArtifactoryRepository {
 
 	private final RestTemplate restTemplate;
 
-	private final String uri;
+	private final URI uri;
 
 	private final String repositoryName;
 
-	private final Duration retryDelay;
-
-	public HttpArtifactoryRepository(RestTemplate restTemplate, String uri, String repositoryName,
-			Duration retryDelay) {
+	public HttpArtifactoryRepository(RestTemplate restTemplate, URI uri, String repositoryName) {
 		this.restTemplate = restTemplate;
 		this.uri = uri;
 		this.repositoryName = repositoryName;
-		this.retryDelay = (retryDelay != null) ? retryDelay : Duration.ofSeconds(5);
 	}
 
 	@Override
@@ -126,8 +118,8 @@ public class HttpArtifactoryRepository implements ArtifactoryRepository {
 					throw ex;
 				}
 				console.log("Deploy failed with {} response. Retrying in {}ms.", statusCode,
-						this.retryDelay.toMillis());
-				trySleep(this.retryDelay);
+						HttpArtifactoryRepository.RETRY_DELAY.toMillis());
+				trySleep(HttpArtifactoryRepository.RETRY_DELAY);
 			}
 		}
 	}
@@ -152,7 +144,7 @@ public class HttpArtifactoryRepository implements ArtifactoryRepository {
 	}
 
 	private BodyBuilder deployRequest(DeployableArtifact artifact) {
-		UriComponents uriComponents = UriComponentsBuilder.fromUriString(this.uri)
+		UriComponents uriComponents = UriComponentsBuilder.fromUri(this.uri)
 			.path(this.repositoryName)
 			.path(artifact.getPath())
 			.path(buildMatrixParams(artifact.getProperties()))
@@ -173,40 +165,6 @@ public class HttpArtifactoryRepository implements ArtifactoryRepository {
 			}
 		}
 		return matrix.toString();
-	}
-
-	@Override
-	public void download(String path, File destination, boolean downloadChecksums) {
-		Assert.hasLength(path, "Path must not be empty");
-		getFile(path, destination);
-		if (downloadChecksums && !Checksum.isChecksumFile(path)) {
-			Checksum.getFileExtensions().forEach((checksumExtension) -> {
-				try {
-					getFile(path + checksumExtension, destination);
-				}
-				catch (HttpClientErrorException ex) {
-					// Ignore checksum download failures
-				}
-			});
-		}
-	}
-
-	private void getFile(String path, File destination) {
-		UriComponents uriComponents = UriComponentsBuilder.fromUriString(this.uri)
-			.path(this.repositoryName)
-			.path("/" + path)
-			.build();
-		URI uri = uriComponents.encode().toUri();
-		this.restTemplate.execute(uri, HttpMethod.GET, null, getResponseExtractor(path, destination));
-	}
-
-	private ResponseExtractor<Void> getResponseExtractor(String path, File destination) {
-		return (response) -> {
-			Path fullPath = destination.toPath().resolve(path);
-			Files.createDirectories(fullPath.getParent());
-			Files.copy(response.getBody(), fullPath);
-			return null;
-		};
 	}
 
 }

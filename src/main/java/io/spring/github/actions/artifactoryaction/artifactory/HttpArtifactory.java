@@ -17,13 +17,9 @@
 package io.spring.github.actions.artifactoryaction.artifactory;
 
 import java.io.IOException;
-import java.net.Proxy;
 import java.net.URI;
 import java.time.Duration;
 import java.util.function.Supplier;
-
-import io.spring.github.actions.artifactoryaction.http.ConcourseSslContextFactory;
-import io.spring.github.actions.artifactoryaction.http.SimpleSslClientHttpRequestFactory;
 
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpMethod;
@@ -51,31 +47,24 @@ public class HttpArtifactory implements Artifactory {
 	}
 
 	@Override
-	public ArtifactoryServer server(String uri, String username, String password, Proxy proxy, Duration retryDelay,
-			Boolean admin) {
-		uri = (!uri.endsWith("/")) ? uri + '/' : uri;
+	public ArtifactoryServer server(URI uri, String username, String password) {
 		RestTemplateBuilder restTemplateBuilder = this.restTemplateBuilder
-			.requestFactory(getRequestFactorySupplier(username, password, proxy))
+			.requestFactory(getRequestFactorySupplier(username, password))
 			.setConnectTimeout(Duration.ofMinutes(1))
 			.setReadTimeout(Duration.ofMinutes(5));
-		return new HttpArtifactoryServer(restTemplateBuilder.build(), uri, retryDelay, admin);
+		return new HttpArtifactoryServer(restTemplateBuilder.build(), uri);
 	}
 
-	private Supplier<ClientHttpRequestFactory> getRequestFactorySupplier(String username, String password,
-			Proxy proxy) {
-		Supplier<ClientHttpRequestFactory> supplier = () -> getRequestFactory(proxy);
+	private Supplier<ClientHttpRequestFactory> getRequestFactorySupplier(String username, String password) {
+		Supplier<ClientHttpRequestFactory> supplier = () -> getRequestFactory();
 		if (StringUtils.hasText(username)) {
 			supplier = new BasicAuthClientHttpRequestFactorySupplier(supplier, username, password);
 		}
 		return supplier;
 	}
 
-	private ClientHttpRequestFactory getRequestFactory(Proxy proxy) {
-		SimpleClientHttpRequestFactory factory = (ConcourseSslContextFactory.isAvailable())
-				? new SimpleSslClientHttpRequestFactory(new ConcourseSslContextFactory())
-				: new SimpleClientHttpRequestFactory();
-		factory.setProxy(proxy);
-		return factory;
+	private ClientHttpRequestFactory getRequestFactory() {
+		return new SimpleClientHttpRequestFactory();
 	}
 
 	private static class BasicAuthClientHttpRequestFactorySupplier implements Supplier<ClientHttpRequestFactory> {

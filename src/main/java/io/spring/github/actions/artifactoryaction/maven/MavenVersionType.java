@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,11 +21,12 @@ import java.util.regex.Pattern;
 import org.springframework.util.Assert;
 
 /**
- * Different styles of maven version numbers.
+ * Different styles of Maven version numbers.
  *
  * @author Phillip Webb
+ * @author Andy Wilkinson
  */
-public enum MavenVersionType {
+enum MavenVersionType {
 
 	/**
 	 * A timestamp based snapshot, for example {@code 1.0.0.BUILD-20171005.194031-1}.

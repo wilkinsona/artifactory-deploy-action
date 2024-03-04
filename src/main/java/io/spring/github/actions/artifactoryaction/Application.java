@@ -16,23 +16,32 @@
 
 package io.spring.github.actions.artifactoryaction;
 
+import java.io.File;
+import java.io.IOException;
+
+import io.spring.github.actions.artifactoryaction.command.DeployHandler;
+import io.spring.github.actions.artifactoryaction.io.Directory;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ConfigurableApplicationContext;
 
 /**
  * Main Application entry point.
  *
  * @author Phillip Webb
+ * @author Andy Wilkinson
  */
 @SpringBootApplication
 @EnableConfigurationProperties(ArtifactoryProperties.class)
 public class Application {
 
-	public static void main(String[] args) {
-		ArtifactoryProperties artifactoryProperties = SpringApplication.run(Application.class, args)
-			.getBean(ArtifactoryProperties.class);
+	public static void main(String[] args) throws IOException {
+		ConfigurableApplicationContext app = SpringApplication.run(Application.class, args);
+		ArtifactoryProperties artifactoryProperties = app.getBean(ArtifactoryProperties.class);
 		System.out.println(artifactoryProperties);
+		app.getBean(DeployHandler.class).handle(new Directory(new File(".").getCanonicalFile()));
 	}
 
 }

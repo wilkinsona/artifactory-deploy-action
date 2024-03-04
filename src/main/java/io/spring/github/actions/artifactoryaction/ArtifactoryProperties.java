@@ -36,9 +36,10 @@ public record ArtifactoryProperties(@DefaultValue ArtifactoryProperties.Server s
 
 	}
 
-	public record Deploy(String folder, String repository, int threads, @DefaultValue Deploy.Build build) {
+	public record Deploy(String folder, String repository, @DefaultValue("1") int threads,
+			@DefaultValue Deploy.Build build) {
 
-		public record Build(String name, String number, URI uri) {
+		public record Build(String name, int number, URI uri) {
 
 		}
 

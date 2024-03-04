@@ -16,10 +16,6 @@
 
 package io.spring.github.actions.artifactoryaction.artifactory;
 
-import java.net.HttpURLConnection;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
-import java.net.Proxy.Type;
 import java.net.URI;
 import java.util.List;
 
@@ -40,13 +36,11 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author Madhura Bhave
  * @author Gabriel Petrovay
+ * @author Andy Wilkinson
  */
 class HttpArtifactoryTests {
 
-	/**
-	 *
-	 */
-	private static final String URI = "https://example.com";
+	private static final URI REPO_URI = URI.create("https://repo.example.com");
 
 	private RestTemplateBuilder builder = new RestTemplateBuilder();
 
@@ -59,7 +53,7 @@ class HttpArtifactoryTests {
 
 	@Test
 	void serverWhenNoUsernameReturnsServer() {
-		ArtifactoryServer server = this.artifactory.server(URI, null, null, null, null, false);
+		ArtifactoryServer server = this.artifactory.server(REPO_URI, null, null);
 		RestTemplate restTemplate = (RestTemplate) ReflectionTestUtils.getField(server, "restTemplate");
 		List<?> interceptors = (List<?>) ReflectionTestUtils.getField(restTemplate, "interceptors");
 		assertThat(interceptors.size()).isEqualTo(0);
@@ -67,22 +61,11 @@ class HttpArtifactoryTests {
 
 	@Test
 	void serverWithCredentialsReturnsServerWithCredentials() throws Exception {
-		ArtifactoryServer server = this.artifactory.server(URI, "admin", "password", null, null, false);
+		ArtifactoryServer server = this.artifactory.server(REPO_URI, "admin", "password");
 		RestTemplate restTemplate = (RestTemplate) ReflectionTestUtils.getField(server, "restTemplate");
 		ClientHttpRequest request = restTemplate.getRequestFactory()
 			.createRequest(new URI("http://localhost"), HttpMethod.GET);
 		assertThat(request.getHeaders()).containsKey(HttpHeaders.AUTHORIZATION);
-	}
-
-	@Test
-	void serverWithProxyReturnsServerWithProxy() throws Exception {
-		Proxy proxy = new Proxy(Type.HTTP, new InetSocketAddress("proxy.example.com", 8080));
-		ArtifactoryServer server = this.artifactory.server(URI, "admin", "password", proxy, null, false);
-		RestTemplate restTemplate = (RestTemplate) ReflectionTestUtils.getField(server, "restTemplate");
-		ClientHttpRequest request = restTemplate.getRequestFactory()
-			.createRequest(new URI("http://localhost"), HttpMethod.GET);
-		HttpURLConnection connection = (HttpURLConnection) ReflectionTestUtils.getField(request, "connection");
-		assertThat(connection.usingProxy()).isTrue();
 	}
 
 }

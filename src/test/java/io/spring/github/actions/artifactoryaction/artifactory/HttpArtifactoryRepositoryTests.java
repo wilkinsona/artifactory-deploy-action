@@ -18,7 +18,7 @@ package io.spring.github.actions.artifactoryaction.artifactory;
 
 import java.io.File;
 import java.net.SocketException;
-import java.time.Duration;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -33,10 +33,8 @@ import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.client.RestClientTest;
 import org.springframework.boot.test.web.client.MockServerRestTemplateCustomizer;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.test.web.client.RequestMatcher;
 import org.springframework.test.web.client.ResponseCreator;
@@ -83,7 +81,7 @@ class HttpArtifactoryRepositoryTests {
 	@BeforeEach
 	void setup() {
 		this.artifactoryRepository = this.artifactory
-			.server("https://repo.example.com", "admin", "password", null, Duration.ofMillis(10), false)
+			.server(URI.create("https://repo.example.com"), "admin", "password")
 			.repository("libs-snapshot-local");
 	}
 
@@ -234,67 +232,6 @@ class HttpArtifactoryRepositoryTests {
 
 	private RequestMatcher noChecksumHeader() {
 		return (request) -> assertThat(request.getHeaders().keySet()).doesNotContain("X-Checksum-Deploy");
-	}
-
-	@Test
-	void downloadFetchsArtifactAndWriteToFile() {
-		String url = "https://repo.example.com/libs-snapshot-local/foo/bar.jar";
-		expectFileDownload(url);
-		this.artifactoryRepository.download("foo/bar.jar", this.tempDir, false);
-		assertThat(new File(new File(this.tempDir, "foo"), "bar.jar")).exists().isFile();
-		this.server.verify();
-	}
-
-	@Test
-	void downloadFetchsChecksumFiles() {
-		String url = "https://repo.example.com/libs-snapshot-local/foo/bar.jar";
-		expectFileDownload(url);
-		expectFileDownload(url + ".md5");
-		expectFileDownload(url + ".sha1");
-		this.artifactoryRepository.download("foo/bar.jar", this.tempDir, true);
-		File folder = new File(this.tempDir, "foo");
-		assertThat(new File(folder, "bar.jar")).exists().isFile();
-		assertThat(new File(folder, "bar.jar.md5")).exists().isFile();
-		assertThat(new File(folder, "bar.jar.sha1")).exists().isFile();
-		this.server.verify();
-	}
-
-	@Test
-	void downloadWhenChecksumFileDoesNotFetchChecksumFiles() {
-		String url = "https://repo.example.com/libs-snapshot-local/foo/bar.jar.md5";
-		expectFileDownload(url);
-		this.artifactoryRepository.download("foo/bar.jar.md5", this.tempDir, true);
-		File folder = new File(this.tempDir, "foo");
-		assertThat(new File(folder, "bar.jar.md5")).exists().isFile();
-		assertThat(new File(folder, "bar.jar.md5.md5")).doesNotExist();
-		assertThat(new File(folder, "bar.jar.md5.sha1")).doesNotExist();
-		this.server.verify();
-	}
-
-	@Test
-	void downloadIgnoresChecksumFileFailures() {
-		String url = "https://repo.example.com/libs-snapshot-local/foo/bar.jar";
-		expectFileDownload(url);
-		expectFile404(url + ".md5");
-		expectFile404(url + ".sha1");
-		this.artifactoryRepository.download("foo/bar.jar", this.tempDir, true);
-		File folder = new File(this.tempDir, "foo");
-		assertThat(new File(folder, "bar.jar")).exists().isFile();
-		assertThat(new File(folder, "bar.jar.md5")).doesNotExist();
-		assertThat(new File(folder, "bar.jar.sha1")).doesNotExist();
-		this.server.verify();
-	}
-
-	private void expectFileDownload(String url) {
-		this.server.expect(requestTo(url))
-			.andExpect(method(HttpMethod.GET))
-			.andRespond(withSuccess(new ByteArrayResource(new byte[] {}), MediaType.APPLICATION_OCTET_STREAM));
-	}
-
-	private void expectFile404(String url) {
-		this.server.expect(requestTo(url))
-			.andExpect(method(HttpMethod.GET))
-			.andRespond(withStatus(HttpStatus.NOT_FOUND));
 	}
 
 }

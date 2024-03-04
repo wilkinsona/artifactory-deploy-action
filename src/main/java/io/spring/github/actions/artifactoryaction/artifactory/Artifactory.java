@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2023 the original author or authors.
+ * Copyright 2017-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,7 @@
 
 package io.spring.github.actions.artifactoryaction.artifactory;
 
-import java.net.Proxy;
-import java.time.Duration;
+import java.net.URI;
 
 /**
  * Interface providing access to Artifactory.
@@ -34,37 +33,8 @@ public interface Artifactory {
 	 * @param uri the server URI
 	 * @param username the connection username
 	 * @param password the connection password
-	 * @param proxy the proxy to use or {@code null}
 	 * @return an {@link ArtifactoryServer}
 	 */
-	default ArtifactoryServer server(String uri, String username, String password, Proxy proxy) {
-		return server(uri, username, password, proxy, null);
-	}
-
-	/**
-	 * Return an {@link ArtifactoryServer} for the specified connection details.
-	 * @param uri the server URI
-	 * @param username the connection username
-	 * @param password the connection password
-	 * @param proxy the proxy to use or {@code null}
-	 * @param retryDelay the delay between retries
-	 * @return an {@link ArtifactoryServer}
-	 */
-	default ArtifactoryServer server(String uri, String username, String password, Proxy proxy, Duration retryDelay) {
-		return server(uri, username, password, proxy, retryDelay, null);
-	}
-
-	/**
-	 * Return an {@link ArtifactoryServer} for the specified connection details.
-	 * @param uri the server URI
-	 * @param username the connection username
-	 * @param password the connection password
-	 * @param proxy the proxy to use or {@code null}
-	 * @param retryDelay the delay between retries
-	 * @param admin if the user has admin rights or {@code null} to detect
-	 * @return an {@link ArtifactoryServer}
-	 */
-	ArtifactoryServer server(String uri, String username, String password, Proxy proxy, Duration retryDelay,
-			Boolean admin);
+	ArtifactoryServer server(URI uri, String username, String password);
 
 }

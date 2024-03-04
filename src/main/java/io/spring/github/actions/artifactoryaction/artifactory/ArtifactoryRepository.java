@@ -16,10 +16,7 @@
 
 package io.spring.github.actions.artifactoryaction.artifactory;
 
-import java.io.File;
-
 import io.spring.github.actions.artifactoryaction.artifactory.payload.DeployableArtifact;
-import io.spring.github.actions.artifactoryaction.artifactory.payload.DeployedArtifact;
 
 /**
  * Access to an artifactory repository.
@@ -35,23 +32,5 @@ public interface ArtifactoryRepository {
 	 * @param options any deploy options
 	 */
 	void deploy(DeployableArtifact artifact, DeployOption... options);
-
-	/**
-	 * Download the specified artifact to the given destination.
-	 * @param artifact the artifacts to download
-	 * @param destination the destination folder.
-	 * @param downloadChecksums if checksum files should also be downloaded
-	 */
-	default void download(DeployedArtifact artifact, File destination, boolean downloadChecksums) {
-		download(artifact.getPath() + "/" + artifact.getName(), destination, downloadChecksums);
-	}
-
-	/**
-	 * Download the specified artifact to the given destination.
-	 * @param path the path of the artifact to download
-	 * @param destination the destination folder.
-	 * @param downloadChecksums if checksum files should also be downloaded
-	 */
-	void download(String path, File destination, boolean downloadChecksums);
 
 }

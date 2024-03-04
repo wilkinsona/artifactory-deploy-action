@@ -27,8 +27,9 @@ import org.springframework.util.StringUtils;
  * Maven coordinates (group/artifact/version etc).
  *
  * @author Phillip Webb
+ * @author Andy Wilkinson
  */
-public final class MavenCoordinates implements Comparable<MavenCoordinates> {
+final class MavenCoordinates implements Comparable<MavenCoordinates> {
 
 	private static final String SNAPSHOT = "SNAPSHOT";
 

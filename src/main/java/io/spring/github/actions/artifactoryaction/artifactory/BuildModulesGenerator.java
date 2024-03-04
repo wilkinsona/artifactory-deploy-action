@@ -16,7 +16,6 @@
 
 package io.spring.github.actions.artifactoryaction.artifactory;
 
-import java.util.Collections;
 import java.util.List;
 
 import io.spring.github.actions.artifactoryaction.artifactory.payload.BuildModule;
@@ -31,11 +30,6 @@ import io.spring.github.actions.artifactoryaction.artifactory.payload.Deployable
  */
 @FunctionalInterface
 public interface BuildModulesGenerator {
-
-	/**
-	 * {@link BuildModulesGenerator} that always returns an empty list.
-	 */
-	BuildModulesGenerator NONE = ((a) -> Collections.emptyList());
 
 	/**
 	 * Generate {@link BuildModule BuildModules} for the specified
