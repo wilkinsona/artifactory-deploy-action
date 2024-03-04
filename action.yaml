@@ -10,8 +10,6 @@ inputs:
   password:
     description: 'Artifactory password'
     required: true
-  repository:
-    description: 'Artifactory repository to which the artifacts should be deployed'
   build-name:
     description: 'Name of the build'
     required: true
@@ -19,6 +17,24 @@ inputs:
     description: 'Number of the build'
     required: true
     default: ${{ github.run_number }}
+  build-uri:
+    description: 'URI of the build that produced the artifacts that are to be deployed'
+    required: false
+  folder:
+    description: 'Folder containing the artifacts to deploy'
+    required: false
+  repository:
+    description: 'Artifactory repository to which the artifacts should be deployed'
+  signing-key:
+    description: 'A PGP/GPG signing key that will be used to sign artifacts. Can be either the key content or a reference to a file containing the key'
+    required: false
+  signing-passphrase:
+    description: 'Passphrase used to unlock the signing key'
+    required: false
+  threads:
+    description: 'Number of threads to use when deploying artifacts'
+    required: false
+    default: 1
 runs:
   using: 'docker'
   image: 'Dockerfile'
@@ -27,5 +43,10 @@ runs:
     - --artifactory.username=${{ inputs.username }}
     - --artifactory.password=${{ inputs.password }}
     - --artifactory.build-name=${{ inputs.build-name }}
-    - --artifactory.repository=${{ inputs.repository }}
     - --artifactory.build-number=${{ inputs.build-number }}
+    - --artifactory.build-uri=${{ inputs.build-uri }}
+    - --artifactory.folder=${{ inputs.folder }}
+    - --artifactory.repository=${{ inputs.repository }}
+    - --artifactory.threads=${{ inputs.threads }}
+    - --signing.key=${{ inputs.signing-key}}
+    - --signing.passphase=${{ inputs.signing-passphrase }}
