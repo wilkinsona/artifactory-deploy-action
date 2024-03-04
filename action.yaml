@@ -20,6 +20,7 @@ inputs:
   build-uri:
     description: 'URI of the build that produced the artifacts that are to be deployed'
     required: false
+    default: ${{ format('{0}/{1}/actions/runs/{2}', github.server_url, github.repository, github.run_id) }}
   folder:
     description: 'Folder containing the artifacts to deploy'
     required: false
