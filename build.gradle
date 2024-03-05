@@ -42,7 +42,6 @@ dependencies {
 
 	implementation(platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES))
 
-	implementation("org.apache.maven:maven-repository-metadata:3.5.0")
 	implementation("org.bouncycastle:bcpg-jdk18on:1.77")
 	implementation("org.springframework:spring-web")
 	implementation("org.springframework.boot:spring-boot-starter-json")
@@ -51,7 +50,7 @@ dependencies {
 	integrationTestImplementation("org.testcontainers:testcontainers")
 
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
-	testImplementation("org.xmlunit:xmlunit-core")
+	// testImplementation("org.xmlunit:xmlunit-core")
 
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }

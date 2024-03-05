@@ -21,12 +21,15 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import io.spring.github.actions.artifactoryaction.artifactory.Artifactory;
 import io.spring.github.actions.artifactoryaction.artifactory.Artifactory.BuildRun;
 import io.spring.github.actions.artifactoryaction.artifactory.ArtifactoryProperties;
 import io.spring.github.actions.artifactoryaction.artifactory.ArtifactoryProperties.Deploy;
+import io.spring.github.actions.artifactoryaction.artifactory.ArtifactoryProperties.Deploy.ArtifactSet;
 import io.spring.github.actions.artifactoryaction.artifactory.ArtifactoryProperties.Deploy.Build;
 import io.spring.github.actions.artifactoryaction.artifactory.ArtifactoryProperties.Server;
 import io.spring.github.actions.artifactoryaction.artifactory.payload.BuildModule;
@@ -185,23 +188,22 @@ class DeployerTests {
 		}
 	}
 
-	//
-	// @Test
-	// void handleWhenHasArtifactSetDeploysWithAdditionalProperties() throws Exception {
-	// List<ArtifactSet> artifactSet = new ArrayList<>();
-	// List<String> include = Collections.singletonList("/**/foo-0.0.1.jar");
-	// List<String> exclude = null;
-	// Map<String, String> properties = Collections.singletonMap("foo", "bar");
-	// artifactSet.add(new ArtifactSet(include, exclude, properties));
-	// OutRequest request = createRequest("1234", null, null, false, false, artifactSet,
-	// 1);
-	// Directory directory = createDirectory();
-	// configureMockScanner(directory);
-	// this.deployer.handle(request, directory);
-	// verify(this.artifactoryRepository).deploy(this.artifactCaptor.capture());
-	// DeployableArtifact deployed = this.artifactCaptor.getValue();
-	// assertThat(deployed.getProperties()).containsEntry("foo", "bar");
-	// }
+	@Test
+	void deployWhenHasArtifactSetDeploysWithAdditionalProperties() throws Exception {
+		File artifact = new File(this.tempDir, "com/example/foo/0.0.1/foo-0.0.1.jar");
+		artifact.getParentFile().mkdirs();
+		Files.createFile(artifact.toPath());
+		given(this.directoryScanner.scan(any(File.class))).willReturn(FileSet.of(artifact));
+		deployer(1234, new ArtifactSet(List.of("/**/foo-0.0.1.jar"), Collections.emptyList(), Map.of("foo", "bar")))
+			.deploy();
+		verify(this.artifactory).deploy(eq("libs-example-local"), this.artifactCaptor.capture());
+		DeployableArtifact deployed = this.artifactCaptor.getValue();
+		assertThat(deployed.getPath()).isEqualTo("/com/example/foo/0.0.1/foo-0.0.1.jar");
+		assertThat(deployed.getProperties()).containsEntry("build.name", "my-build")
+			.containsEntry("build.number", "1234")
+			.containsKey("build.timestamp")
+			.containsEntry("foo", "bar");
+	}
 
 	@Test
 	void deployFiltersChecksumFiles() throws IOException {
@@ -309,17 +311,27 @@ class DeployerTests {
 	}
 
 	private Deployer deployer(int buildNumber) {
-		return deployer(buildNumber, null);
+		return deployer(buildNumber, null, null);
+	}
+
+	private Deployer deployer(int buildNumber, ArtifactSet artifactSet) {
+		return deployer(buildNumber, null, artifactSet);
 	}
 
 	private Deployer deployer(int buildNumber, String project) {
-		return new Deployer(createProperties(buildNumber, project), this.artifactory, this.directoryScanner);
+		return deployer(buildNumber, project, null);
 	}
 
-	private ArtifactoryProperties createProperties(int buildNumber, String project) {
+	private Deployer deployer(int buildNumber, String project, ArtifactSet artifactSet) {
+		return new Deployer(createProperties(buildNumber, project, artifactSet), this.artifactory,
+				this.directoryScanner);
+	}
+
+	private ArtifactoryProperties createProperties(int buildNumber, String project, ArtifactSet artifactSet) {
 		return new ArtifactoryProperties(new Server(URI.create("https://repo.example.com"), "alice", "secret"),
-				new Deploy(project, this.tempDir.getAbsolutePath(), "libs-example-local", 1, new Build("my-build",
-						buildNumber, URI.create("https://ci.example.com/builds/" + buildNumber))));
+				new Deploy(project, this.tempDir.getAbsolutePath(), "libs-example-local", 1,
+						new Build("my-build", buildNumber, URI.create("https://ci.example.com/builds/" + buildNumber)),
+						(artifactSet != null) ? List.of(artifactSet) : Collections.emptyList()));
 	}
 
 }

@@ -16,6 +16,7 @@
 
 package io.spring.github.actions.artifactoryaction.artifactory;
 
+import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
@@ -34,6 +35,12 @@ class ArtifactoryConfiguration {
 	Artifactory artifactory(ArtifactoryProperties properties, RestTemplateBuilder restTemplateBuilder) {
 		return new HttpArtifactory(restTemplateBuilder, properties.server().uri(), properties.server().username(),
 				properties.server().password());
+	}
+
+	@Bean
+	@ConfigurationPropertiesBinding
+	StringToArtifactSetsConverter artifactSetConverter() {
+		return new StringToArtifactSetsConverter();
 	}
 
 }

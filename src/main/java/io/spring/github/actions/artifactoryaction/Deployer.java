@@ -36,12 +36,14 @@ import java.util.stream.Collectors;
 import io.spring.github.actions.artifactoryaction.artifactory.Artifactory;
 import io.spring.github.actions.artifactoryaction.artifactory.Artifactory.BuildRun;
 import io.spring.github.actions.artifactoryaction.artifactory.ArtifactoryProperties;
+import io.spring.github.actions.artifactoryaction.artifactory.ArtifactoryProperties.Deploy.ArtifactSet;
 import io.spring.github.actions.artifactoryaction.artifactory.payload.BuildModule;
 import io.spring.github.actions.artifactoryaction.artifactory.payload.DeployableArtifact;
 import io.spring.github.actions.artifactoryaction.artifactory.payload.DeployableFileArtifact;
 import io.spring.github.actions.artifactoryaction.io.DirectoryScanner;
 import io.spring.github.actions.artifactoryaction.io.FileSet;
 import io.spring.github.actions.artifactoryaction.io.FileSet.Category;
+import io.spring.github.actions.artifactoryaction.io.PathFilter;
 import io.spring.github.actions.artifactoryaction.maven.MavenBuildModulesGenerator;
 import io.spring.github.actions.artifactoryaction.maven.MavenCoordinates;
 import io.spring.github.actions.artifactoryaction.maven.MavenVersionType;
@@ -135,17 +137,25 @@ public class Deployer {
 
 	private Map<String, String> getDeployableArtifactProperties(String path, int buildNumber, Instant started) {
 		Map<String, String> properties = new LinkedHashMap<>();
+		addArtifactSetProperties(path, properties);
 		addBuildProperties(buildNumber, started, properties);
 		return properties;
 	}
 
-	// TODO Support for artifact sets
-	// private PathFilter getFilter(ArtifactSet artifactSet) {
-	// logger.debug("Creating artifact set filter including {} and excluding {}",
-	// artifactSet.getInclude(),
-	// artifactSet.getExclude());
-	// return new PathFilter(artifactSet.getInclude(), artifactSet.getExclude());
-	// }
+	private void addArtifactSetProperties(String path, Map<String, String> properties) {
+		for (ArtifactSet artifactSet : this.properties.deploy().artifactSet()) {
+			if (getFilter(artifactSet).isMatch(path)) {
+				logger.debug("Artifact set matched, adding properties {}", artifactSet.properties());
+				properties.putAll(artifactSet.properties());
+			}
+		}
+	}
+
+	private PathFilter getFilter(ArtifactSet artifactSet) {
+		logger.debug("Creating artifact set filter including {} and excluding {}", artifactSet.include(),
+				artifactSet.exclude());
+		return new PathFilter(artifactSet.include(), artifactSet.exclude());
+	}
 
 	private void addBuildProperties(int buildNumber, Instant started, Map<String, String> properties) {
 		properties.put("build.name", this.properties.deploy().build().name());

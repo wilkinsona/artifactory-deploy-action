@@ -17,6 +17,9 @@
 package io.spring.github.actions.artifactoryaction.artifactory;
 
 import java.net.URI;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
@@ -44,10 +47,11 @@ public record ArtifactoryProperties(@DefaultValue ArtifactoryProperties.Server s
 
 	}
 
-	public record Deploy(String project, String folder, String repository, int threads, Deploy.Build build) {
+	public record Deploy(String project, String folder, String repository, int threads, Deploy.Build build,
+			List<Deploy.ArtifactSet> artifactSet) {
 
 		public Deploy(String project, String folder, String repository, @DefaultValue("1") int threads,
-				@DefaultValue Deploy.Build build) {
+				@DefaultValue Deploy.Build build, List<Deploy.ArtifactSet> artifactSet) {
 			Assert.hasText(folder, "artifactory.deploy.folder is required");
 			Assert.hasText(repository, "artifactory.deploy.repository is required");
 			this.project = project;
@@ -55,6 +59,7 @@ public record ArtifactoryProperties(@DefaultValue ArtifactoryProperties.Server s
 			this.repository = repository;
 			this.threads = threads;
 			this.build = build;
+			this.artifactSet = (artifactSet != null) ? artifactSet : Collections.emptyList();
 		}
 
 		public record Build(String name, int number, URI uri) {
@@ -64,6 +69,16 @@ public record ArtifactoryProperties(@DefaultValue ArtifactoryProperties.Server s
 				this.name = name;
 				this.number = number;
 				this.uri = uri;
+			}
+
+		}
+
+		public record ArtifactSet(List<String> include, List<String> exclude, Map<String, String> properties) {
+
+			public ArtifactSet(List<String> include, List<String> exclude, Map<String, String> properties) {
+				this.include = (include != null) ? include : Collections.emptyList();
+				this.exclude = (exclude != null) ? exclude : Collections.emptyList();
+				this.properties = (properties != null) ? properties : Collections.emptyMap();
 			}
 
 		}
