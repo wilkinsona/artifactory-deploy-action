@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,28 +25,19 @@ import org.springframework.util.Assert;
 /**
  * A single module included in {@link BuildInfo}.
  *
+ * @param id the id of the module ({@code groupId:artifactId:version})
+ * @param artifacts the artifacts of the module
  * @author Phillip Webb
  * @author Madhura Bhave
+ * @author Andy Wilkinson
  */
-public class BuildModule {
-
-	private final String id;
-
-	private final List<BuildArtifact> artifacts;
+public record BuildModule(String id, List<BuildArtifact> artifacts) {
 
 	public BuildModule(String id, List<BuildArtifact> artifacts) {
 		Assert.hasText(id, "ID must not be empty");
 		this.id = id;
 		this.artifacts = (artifacts != null) ? Collections.unmodifiableList(new ArrayList<>(artifacts))
 				: Collections.emptyList();
-	}
-
-	public String getId() {
-		return this.id;
-	}
-
-	public List<BuildArtifact> getArtifacts() {
-		return this.artifacts;
 	}
 
 }

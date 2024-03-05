@@ -21,8 +21,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.spring.github.actions.artifactoryaction.jackson.JsonIsoDateFormat;
 
 import org.springframework.util.Assert;
 
@@ -32,6 +32,7 @@ import org.springframework.util.Assert;
  * @author Phillip Webb
  * @author Madhura Bhave
  */
+
 public class BuildInfo {
 
 	@JsonProperty("name")
@@ -45,7 +46,7 @@ public class BuildInfo {
 
 	private final BuildAgent buildAgent;
 
-	@JsonIsoDateFormat
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX", timezone = "UTC")
 	private final Instant started;
 
 	@JsonProperty("url")

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.spring.github.actions.artifactoryaction;
+package io.spring.github.actions.artifactoryaction.maven;
 
 import java.io.File;
 import java.io.IOException;
@@ -56,15 +56,15 @@ class MavenBuildModulesGeneratorTests {
 		deployableArtifacts.add(artifact("/com/example/bar/1.0.0/bar-1.0.0-sources.jar"));
 		List<BuildModule> buildModules = this.generator.getBuildModules(deployableArtifacts);
 		assertThat(buildModules).hasSize(2);
-		assertThat(buildModules.get(0).getId()).isEqualTo("com.example:foo:1.0.0");
-		assertThat(buildModules.get(0).getArtifacts()).extracting(BuildArtifact::getName)
+		assertThat(buildModules.get(0).id()).isEqualTo("com.example:foo:1.0.0");
+		assertThat(buildModules.get(0).artifacts()).extracting(BuildArtifact::name)
 			.containsExactly("foo-1.0.0.pom", "foo-1.0.0.jar", "foo-1.0.0-sources.jar");
-		assertThat(buildModules.get(0).getArtifacts()).extracting(BuildArtifact::getType)
+		assertThat(buildModules.get(0).artifacts()).extracting(BuildArtifact::type)
 			.containsExactly("pom", "jar", "java-source-jar");
-		assertThat(buildModules.get(1).getId()).isEqualTo("com.example:bar:1.0.0");
-		assertThat(buildModules.get(1).getArtifacts()).extracting(BuildArtifact::getName)
+		assertThat(buildModules.get(1).id()).isEqualTo("com.example:bar:1.0.0");
+		assertThat(buildModules.get(1).artifacts()).extracting(BuildArtifact::name)
 			.containsExactly("bar-1.0.0.pom", "bar-1.0.0.jar", "bar-1.0.0-sources.jar");
-		assertThat(buildModules.get(1).getArtifacts()).extracting(BuildArtifact::getType)
+		assertThat(buildModules.get(1).artifacts()).extracting(BuildArtifact::type)
 			.containsExactly("pom", "jar", "java-source-jar");
 	}
 
@@ -76,7 +76,7 @@ class MavenBuildModulesGeneratorTests {
 		deployableArtifacts.add(artifact("/com/example/foo/1.0.0/foo-1.0.0.md5"));
 		deployableArtifacts.add(artifact("/com/example/foo/1.0.0/foo-1.0.0.sha"));
 		List<BuildModule> buildModules = this.generator.getBuildModules(deployableArtifacts);
-		assertThat(buildModules.get(0).getArtifacts()).extracting(BuildArtifact::getName)
+		assertThat(buildModules.get(0).artifacts()).extracting(BuildArtifact::name)
 			.containsExactly("foo-1.0.0.pom", "foo-1.0.0.asc");
 	}
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.spring.github.actions.artifactoryaction;
+package io.spring.github.actions.artifactoryaction.maven;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -45,7 +45,7 @@ import org.springframework.util.StringUtils;
  * @author Madhura Bhave
  * @author Andy Wilkinson
  */
-class MavenBuildModulesGenerator {
+public class MavenBuildModulesGenerator {
 
 	private static final Map<String, String> SUFFIX_TYPES;
 
@@ -60,7 +60,7 @@ class MavenBuildModulesGenerator {
 
 	private static Pattern PATH_PATTERN = Pattern.compile("\\/(.*)\\/(.*)\\/(.*)\\/(.*)");
 
-	List<BuildModule> getBuildModules(List<DeployableArtifact> deployableArtifacts) {
+	public List<BuildModule> getBuildModules(List<DeployableArtifact> deployableArtifacts) {
 		List<BuildModule> buildModules = new ArrayList<>();
 		getBuildArtifactsById(deployableArtifacts)
 			.forEach((id, artifacts) -> buildModules.add(new BuildModule(id, artifacts)));

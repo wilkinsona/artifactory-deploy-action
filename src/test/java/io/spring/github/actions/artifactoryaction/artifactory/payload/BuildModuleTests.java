@@ -56,7 +56,7 @@ class BuildModuleTests {
 	@Test
 	void createWhenArtifactsIsEmptyUsesEmptyList() {
 		BuildModule module = new BuildModule(ID, null);
-		assertThat(module.getArtifacts()).isNotNull().isEmpty();
+		assertThat(module.artifacts()).isNotNull().isEmpty();
 	}
 
 	@Test

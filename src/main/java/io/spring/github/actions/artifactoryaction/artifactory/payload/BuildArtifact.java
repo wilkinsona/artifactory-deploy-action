@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,31 +16,23 @@
 
 package io.spring.github.actions.artifactoryaction.artifactory.payload;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import org.springframework.util.Assert;
 
 /**
  * A single build artifact included in {@link BuildInfo}.
  *
+ * @param type type of the artifact
+ * @param sha1 SHA1 checksum of the artifact
+ * @param md5 MD5 checksum of the artifact
+ * @param name name of the artifact
  * @author Phillip Webb
  * @author Madhura Bhave
+ * @author Andy Wilkinson
  * @see BuildInfo
  */
-public class BuildArtifact {
+public record BuildArtifact(String type, String sha1, String md5, String name) {
 
-	private final String type;
-
-	private final String sha1;
-
-	private final String md5;
-
-	private final String name;
-
-	@JsonCreator
-	public BuildArtifact(@JsonProperty("type") String type, @JsonProperty("sha1") String sha1,
-			@JsonProperty("md5") String md5, @JsonProperty("name") String name) {
+	public BuildArtifact(String type, String sha1, String md5, String name) {
 		Assert.hasText(type, "Type must not be empty");
 		Assert.hasText(sha1, "SHA1 must not be empty");
 		Assert.hasText(md5, "MD5 must not be empty");
@@ -49,22 +41,6 @@ public class BuildArtifact {
 		this.sha1 = sha1;
 		this.md5 = md5;
 		this.name = name;
-	}
-
-	public String getType() {
-		return this.type;
-	}
-
-	public String getSha1() {
-		return this.sha1;
-	}
-
-	public String getMd5() {
-		return this.md5;
-	}
-
-	public String getName() {
-		return this.name;
 	}
 
 }

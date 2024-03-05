@@ -36,13 +36,15 @@ import java.util.stream.Collectors;
 import io.spring.github.actions.artifactoryaction.artifactory.Artifactory;
 import io.spring.github.actions.artifactoryaction.artifactory.Artifactory.BuildRun;
 import io.spring.github.actions.artifactoryaction.artifactory.ArtifactoryProperties;
-import io.spring.github.actions.artifactoryaction.artifactory.DeployOption;
 import io.spring.github.actions.artifactoryaction.artifactory.payload.BuildModule;
 import io.spring.github.actions.artifactoryaction.artifactory.payload.DeployableArtifact;
 import io.spring.github.actions.artifactoryaction.artifactory.payload.DeployableFileArtifact;
 import io.spring.github.actions.artifactoryaction.io.DirectoryScanner;
 import io.spring.github.actions.artifactoryaction.io.FileSet;
 import io.spring.github.actions.artifactoryaction.io.FileSet.Category;
+import io.spring.github.actions.artifactoryaction.maven.MavenBuildModulesGenerator;
+import io.spring.github.actions.artifactoryaction.maven.MavenCoordinates;
+import io.spring.github.actions.artifactoryaction.maven.MavenVersionType;
 import io.spring.github.actions.artifactoryaction.system.ConsoleLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,6 +53,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.util.ObjectUtils;
 
 /**
  * Deployer for deploying to Artifactory.
@@ -63,10 +66,11 @@ import org.springframework.util.MultiValueMap;
 @Component
 public class Deployer {
 
+	private static final Set<String> METADATA_FILES = Collections
+		.unmodifiableSet(new HashSet<>(Arrays.asList("maven-metadata.xml", "maven-metadata-local.xml")));
+
 	private static final Set<String> CHECKSUM_FILE_EXTENSIONS = Collections
 		.unmodifiableSet(new HashSet<>(Arrays.asList(".md5", ".sha1", ".sha256", ".sha512")));
-
-	private static final DeployOption[] NO_DEPLOY_OPTIONS = {};
 
 	private static final Logger logger = LoggerFactory.getLogger(Deployer.class);
 
@@ -100,6 +104,7 @@ public class Deployer {
 
 	private MultiValueMap<Category, DeployableArtifact> getBatchedArtifacts(int buildNumber, Instant started) {
 		File root = new File(this.properties.deploy().folder());
+		Assert.state(!ObjectUtils.isEmpty(root.listFiles()), "No artifacts found in empty directory");
 		logger.debug("Getting deployable artifacts from {}", root);
 		FileSet fileSet = this.directoryScanner.scan(root).filter(getChecksumFilter()).filter(getMetadataFilter());
 		MultiValueMap<Category, DeployableArtifact> batchedArtifacts = new LinkedMultiValueMap<>();
@@ -109,12 +114,23 @@ public class Deployer {
 				String path = DeployableFileArtifact.calculatePath(root, file);
 				logger.debug("Including file {} with path {}", file, path);
 				Map<String, String> properties = getDeployableArtifactProperties(path, buildNumber, started);
+				path = stripSnapshotTimestamp(path);
 				if (paths.add(path)) {
 					batchedArtifacts.add(category, new DeployableFileArtifact(path, file, properties, null));
 				}
 			});
 		});
 		return batchedArtifacts;
+	}
+
+	private String stripSnapshotTimestamp(String path) {
+		MavenCoordinates coordinates = MavenCoordinates.fromPath(path);
+		if (coordinates.getVersionType() != MavenVersionType.TIMESTAMP_SNAPSHOT) {
+			return path;
+		}
+		String stripped = path.replace(coordinates.getSnapshotVersion(), coordinates.getVersion());
+		logger.debug("Stripped timestamp version {} to {}", path, stripped);
+		return stripped;
 	}
 
 	private Map<String, String> getDeployableArtifactProperties(String path, int buildNumber, Instant started) {
@@ -139,10 +155,9 @@ public class Deployer {
 
 	private void deployArtifacts(MultiValueMap<Category, DeployableArtifact> batchedArtifacts) {
 		logger.debug("Deploying artifacts to {}", this.properties.deploy().repository());
-		DeployOption[] options = NO_DEPLOY_OPTIONS;
 		ExecutorService executor = Executors.newFixedThreadPool(this.properties.deploy().threads());
 		Function<DeployableArtifact, CompletableFuture<?>> deployer = (deployableArtifact) -> getArtifactDeployer(
-				options, deployableArtifact);
+				deployableArtifact);
 		try {
 			batchedArtifacts.forEach((category, artifacts) -> deploy(category, artifacts, deployer));
 		}
@@ -169,18 +184,18 @@ public class Deployer {
 		}
 	}
 
-	private CompletableFuture<?> getArtifactDeployer(DeployOption[] options, DeployableArtifact deployableArtifact) {
-		return CompletableFuture.runAsync(() -> deployArtifact(deployableArtifact, options));
+	private CompletableFuture<?> getArtifactDeployer(DeployableArtifact deployableArtifact) {
+		return CompletableFuture.runAsync(() -> deployArtifact(deployableArtifact));
 	}
 
-	private void deployArtifact(DeployableArtifact deployableArtifact, DeployOption[] options) {
+	private void deployArtifact(DeployableArtifact deployableArtifact) {
 		console.log("Deploying {} {} ({}/{})", deployableArtifact.getPath(), deployableArtifact.getProperties(),
 				deployableArtifact.getChecksums().getSha1(), deployableArtifact.getChecksums().getMd5());
-		this.artifactory.deploy(this.properties.deploy().repository(), deployableArtifact, options);
+		this.artifactory.deploy(this.properties.deploy().repository(), deployableArtifact);
 	}
 
 	private Predicate<File> getMetadataFilter() {
-		return (file) -> true;
+		return (file) -> !METADATA_FILES.contains(file.getName().toLowerCase());
 	}
 
 	private Predicate<File> getChecksumFilter() {

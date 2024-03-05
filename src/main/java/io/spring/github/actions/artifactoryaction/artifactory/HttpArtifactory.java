@@ -39,7 +39,6 @@ import org.springframework.http.RequestEntity;
 import org.springframework.http.RequestEntity.BodyBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.Assert;
-import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
@@ -87,11 +86,10 @@ class HttpArtifactory implements Artifactory {
 	}
 
 	@Override
-	public void deploy(String repository, DeployableArtifact artifact, DeployOption... options) {
+	public void deploy(String repository, DeployableArtifact artifact) {
 		try {
 			Assert.notNull(artifact, "Artifact must not be null");
-			if (artifact.getSize() <= CHECKSUM_THRESHOLD
-					|| ObjectUtils.containsElement(options, DeployOption.DISABLE_CHECKSUM_UPLOADS)) {
+			if (artifact.getSize() <= CHECKSUM_THRESHOLD) {
 				deployUsingContent(repository, artifact);
 				return;
 			}

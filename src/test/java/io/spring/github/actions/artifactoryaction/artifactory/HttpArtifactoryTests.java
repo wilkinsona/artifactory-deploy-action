@@ -176,18 +176,6 @@ class HttpArtifactoryTests {
 	}
 
 	@Test
-	void deployWhenNoChecksumUploadOptionFileDoesNotUseChecksum() {
-		DeployableArtifact artifact = artifact("/foo/bar.jar");
-		String url = "https://repo.example.com/libs-snapshot-local/foo/bar.jar";
-		this.server.expect(requestTo(url))
-			.andExpect(method(HttpMethod.PUT))
-			.andExpect(noChecksumHeader())
-			.andRespond(withSuccess());
-		this.artifactory.deploy("libs-snapshot-local", artifact, DeployOption.DISABLE_CHECKSUM_UPLOADS);
-		this.server.verify();
-	}
-
-	@Test
 	void deployWhenFlaky400AndLaterAttemptWorksDeploys() {
 		deployWhenFlaky(false, HttpStatus.BAD_REQUEST);
 	}

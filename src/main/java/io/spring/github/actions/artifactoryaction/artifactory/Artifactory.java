@@ -38,9 +38,8 @@ public interface Artifactory {
 	 * Deploy the specified artifact to the repository.
 	 * @param repository the name of the repository
 	 * @param artifact the artifact to deploy
-	 * @param options any deploy options
 	 */
-	void deploy(String repository, DeployableArtifact artifact, DeployOption... options);
+	void deploy(String repository, DeployableArtifact artifact);
 
 	/**
 	 * Adds a build run.
