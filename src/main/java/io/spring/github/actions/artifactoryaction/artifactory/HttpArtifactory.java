@@ -185,7 +185,7 @@ class HttpArtifactory implements Artifactory {
 	public void addBuildRun(String project, String buildName, BuildRun buildRun) {
 		logger.debug("Adding {} build {}", buildName, buildRun.number());
 		UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(this.uri).path("api/build");
-		if (project != null) {
+		if (StringUtils.hasText(project)) {
 			logger.debug("Publishing to project {}", project);
 			builder = builder.queryParam("project", project);
 		}
