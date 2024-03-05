@@ -1,9 +1,29 @@
+name: CI
 on: [push]
-
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
 jobs:
-  test:
+  build:
+    name: 'Build'
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'liberica'
+          java-version: 17
+      - name: Check out code
+        uses: actions/checkout@v4
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@417ae3ccd767c252f5661f1ace9f835f9654f2b5
+        with:
+          cache-read-only: false
+      - name: Build
+        id: build
+        run: ./gradlew build
+  integration-test:
     runs-on: ubuntu-latest
-    name: Test action
+    name: 'Integration test'
     services:
       artifactory:
         image: docker.bintray.io/jfrog/artifactory-oss:7.12.10
@@ -38,3 +58,4 @@ jobs:
         run: |
           wget http://admin:password@localhost:8081/artifactory/example-repo-local/com/example/module-a/1.0.0-SNAPSHOT/module-a-1.0.0-SNAPSHOT.jar
           wget http://admin:password@localhost:8081/artifactory/example-repo-local/com/example/module-b/1.0.0-SNAPSHOT/module-b-1.0.0-SNAPSHOT.jar
+
