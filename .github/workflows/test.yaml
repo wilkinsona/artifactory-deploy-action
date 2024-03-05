@@ -4,6 +4,11 @@ jobs:
   test:
     runs-on: ubuntu-latest
     name: Test action
+    services:
+      artifactory:
+        image: docker.bintray.io/jfrog/artifactory-oss:7.12.10
+        ports:
+          - 8081/8081
     steps:
       - name: Check out action
         uses: actions/checkout@v4
@@ -11,8 +16,9 @@ jobs:
         uses: ./
         id: run
         with:
-          uri: 'repo.example.com'
-          username: 'alice'
-          password: 'secret'
+          uri: 'http://localhost:8081/artifactory'
+          username: 'admin'
+          password: 'password'
           build-name: ${{github.action}}
-          repository: 'libs-snapshot-local'
+          repository: 'example-repo-local'
+          folder: 'deployment-repository'
