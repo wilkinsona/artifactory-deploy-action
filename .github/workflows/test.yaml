@@ -8,7 +8,7 @@ jobs:
       artifactory:
         image: docker.bintray.io/jfrog/artifactory-oss:7.12.10
         ports:
-          - 8081/8081
+          - 8081:8081
     steps:
       - name: Check out action
         uses: actions/checkout@v4
