@@ -12,7 +12,7 @@ jobs:
     steps:
       - name: Check out action
         uses: actions/checkout@v4
-      - name: Create artifacts to deployment
+      - name: Create artifacts to deploy
         run: |
           mkdir -p deployment-repository/com/example/module-a/1.0.0-SNAPSHOT
           touch deployment-repository/com/example/module-a/1.0.0-SNAPSHOT/module-a-1.0.0-SNAPSHOT.jar
@@ -28,7 +28,7 @@ jobs:
         uses: ./
         id: run
         with:
-          uri: 'http://localhost:8081/artifactory'
+          uri: 'http://artifactory:8081/artifactory'
           username: 'admin'
           password: 'password'
           build-name: ${{github.action}}
@@ -36,5 +36,5 @@ jobs:
           folder: 'deployment-repository'
       - name: Download artifacts
         run: |
-          wget http://localhost:8081/artifactory/example-repo-local/com/example/module-a/1.0.0-SNAPSHOT/module-a-1.0.0-SNAPSHOT.jar
-          wget http://localhost:8081/artifactory/example-repo-local/com/example/module-b/1.0.0-SNAPSHOT/module-b-1.0.0-SNAPSHOT.jar
+          wget http://artifactory:8081/artifactory/example-repo-local/com/example/module-a/1.0.0-SNAPSHOT/module-a-1.0.0-SNAPSHOT.jar
+          wget http://aritfactory:8081/artifactory/example-repo-local/com/example/module-b/1.0.0-SNAPSHOT/module-b-1.0.0-SNAPSHOT.jar
