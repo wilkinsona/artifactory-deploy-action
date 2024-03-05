@@ -19,21 +19,13 @@ package io.spring.github.actions.artifactoryaction.artifactory;
 import java.net.SocketException;
 import java.net.URI;
 import java.time.Duration;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.spring.github.actions.artifactoryaction.artifactory.payload.BuildAgent;
-import io.spring.github.actions.artifactoryaction.artifactory.payload.BuildModule;
+import io.spring.github.actions.artifactoryaction.artifactory.payload.BuildInfo;
 import io.spring.github.actions.artifactoryaction.artifactory.payload.Checksums;
 import io.spring.github.actions.artifactoryaction.artifactory.payload.ContinuousIntegrationAgent;
 import io.spring.github.actions.artifactoryaction.artifactory.payload.DeployableArtifact;
-import io.spring.github.actions.artifactoryaction.jackson.JsonIsoDateFormat;
 import io.spring.github.actions.artifactoryaction.system.ConsoleLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -211,73 +203,6 @@ class HttpArtifactory implements Artifactory {
 					buildRun.modules()));
 		ResponseEntity<Void> exchange = this.restTemplate.exchange(request, Void.class);
 		exchange.getBody();
-	}
-
-	@JsonInclude(Include.NON_NULL)
-	public class BuildInfo {
-
-		@JsonProperty("name")
-		private final String buildName;
-
-		@JsonProperty("number")
-		private final String buildNumber;
-
-		@JsonProperty("agent")
-		private final ContinuousIntegrationAgent continuousIntegrationAgent;
-
-		private final BuildAgent buildAgent;
-
-		@JsonIsoDateFormat
-		private final Instant started;
-
-		@JsonProperty("url")
-		private final String buildUri;
-
-		@JsonProperty("modules")
-		private final List<BuildModule> modules;
-
-		BuildInfo(String buildName, String buildNumber, ContinuousIntegrationAgent continuousIntegrationAgent,
-				BuildAgent buildAgent, Instant started, String buildUri, List<BuildModule> modules) {
-			Assert.hasText(buildName, "BuildName must not be empty");
-			Assert.hasText(buildNumber, "BuildNumber must not be empty");
-			this.buildName = buildName;
-			this.buildNumber = buildNumber;
-			this.continuousIntegrationAgent = continuousIntegrationAgent;
-			this.buildAgent = buildAgent;
-			this.started = (started != null) ? started : Instant.now();
-			this.buildUri = buildUri;
-			this.modules = (modules != null) ? Collections.unmodifiableList(new ArrayList<>(modules))
-					: Collections.emptyList();
-		}
-
-		public String getBuildName() {
-			return this.buildName;
-		}
-
-		public String getBuildNumber() {
-			return this.buildNumber;
-		}
-
-		public ContinuousIntegrationAgent getContinuousIntegrationAgent() {
-			return this.continuousIntegrationAgent;
-		}
-
-		public BuildAgent getBuildAgent() {
-			return this.buildAgent;
-		}
-
-		public Instant getStarted() {
-			return this.started;
-		}
-
-		public String getBuildUri() {
-			return this.buildUri;
-		}
-
-		public List<BuildModule> getModules() {
-			return this.modules;
-		}
-
 	}
 
 }

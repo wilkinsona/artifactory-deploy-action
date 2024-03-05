@@ -17,6 +17,8 @@
 package io.spring.github.actions.artifactoryaction.artifactory.payload;
 
 import java.io.File;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.springframework.core.io.FileSystemResource;
@@ -30,30 +32,42 @@ import org.springframework.util.StringUtils;
  * @author Phillip Webb
  * @author Madhura Bhave
  */
-public class DeployableFileArtifact extends AbstractDeployableArtifact {
+public class DeployableFileArtifact implements DeployableArtifact {
+
+	private final String path;
+
+	private final Map<String, String> properties;
+
+	private Checksums checksums;
 
 	private final File file;
 
-	public DeployableFileArtifact(File root, File file) {
-		this(root, file, null);
-	}
-
-	public DeployableFileArtifact(File root, File file, Map<String, String> properties) {
-		this(root, file, properties, null);
-	}
-
-	public DeployableFileArtifact(File root, File file, Map<String, String> properties, Checksums checksums) {
-		super(calculatePath(root, file), properties, checksums);
-		Assert.isTrue(file.exists(), "File '" + file + "' does not exist");
-		Assert.isTrue(file.isFile(), "File '" + file + "' does not refer to a file");
-		this.file = file;
-	}
-
 	public DeployableFileArtifact(String path, File file, Map<String, String> properties, Checksums checksums) {
-		super(path, properties, checksums);
 		Assert.isTrue(file.exists(), "File '" + file + "' does not exist");
 		Assert.isTrue(file.isFile(), "File '" + file + "' does not refer to a file");
+		this.path = path;
+		this.properties = (properties != null) ? Collections.unmodifiableMap(new LinkedHashMap<>(properties))
+				: Collections.emptyMap();
+		this.checksums = checksums;
 		this.file = file;
+	}
+
+	@Override
+	public String getPath() {
+		return this.path;
+	}
+
+	@Override
+	public Map<String, String> getProperties() {
+		return this.properties;
+	}
+
+	@Override
+	public Checksums getChecksums() {
+		if (this.checksums == null) {
+			this.checksums = Checksums.calculate(getContent());
+		}
+		return this.checksums;
 	}
 
 	@Override

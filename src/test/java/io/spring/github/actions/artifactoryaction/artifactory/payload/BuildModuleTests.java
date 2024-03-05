@@ -33,10 +33,11 @@ import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException
  *
  * @author Phillip Webb
  * @author Madhura Bhave
+ * @author Andy Wilkinson
  */
 @JsonTest
 @ActiveProfiles("test")
-public class BuildModuleTests {
+class BuildModuleTests {
 
 	private static final String ID = "com.example.module:my-module:1.0.0-SNAPSHOT";
 
@@ -47,19 +48,19 @@ public class BuildModuleTests {
 	private JacksonTester<BuildModule> json;
 
 	@Test
-	public void createWhenIdIsEmptyThrowsException() {
+	void createWhenIdIsEmptyThrowsException() {
 		assertThatIllegalArgumentException().isThrownBy(() -> new BuildModule("", null))
 			.withMessage("ID must not be empty");
 	}
 
 	@Test
-	public void createWhenArtifactsIsEmptyUsesEmptyList() {
+	void createWhenArtifactsIsEmptyUsesEmptyList() {
 		BuildModule module = new BuildModule(ID, null);
 		assertThat(module.getArtifacts()).isNotNull().isEmpty();
 	}
 
 	@Test
-	public void writeSerializesJson() throws Exception {
+	void writeSerializesJson() throws Exception {
 		BuildModule module = new BuildModule(ID, Collections.singletonList(BUILD_ARTIFACT));
 		assertThat(this.json.write(module)).isEqualToJson("build-module.json");
 	}

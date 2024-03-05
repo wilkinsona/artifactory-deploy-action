@@ -20,9 +20,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import org.springframework.util.Assert;
 
 /**
@@ -37,8 +34,7 @@ public class BuildModule {
 
 	private final List<BuildArtifact> artifacts;
 
-	@JsonCreator
-	public BuildModule(@JsonProperty("id") String id, @JsonProperty("artifacts") List<BuildArtifact> artifacts) {
+	public BuildModule(String id, List<BuildArtifact> artifacts) {
 		Assert.hasText(id, "ID must not be empty");
 		this.id = id;
 		this.artifacts = (artifacts != null) ? Collections.unmodifiableList(new ArrayList<>(artifacts))

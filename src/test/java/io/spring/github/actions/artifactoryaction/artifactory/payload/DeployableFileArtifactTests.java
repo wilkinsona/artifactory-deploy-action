@@ -18,6 +18,8 @@ package io.spring.github.actions.artifactoryaction.artifactory.payload;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.util.Collections;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
@@ -25,34 +27,73 @@ import org.junit.jupiter.api.io.TempDir;
 
 import org.springframework.util.FileCopyUtils;
 
-import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Tests for {@link DeployableFileArtifact}.
  *
  * @author Phillip Webb
  * @author Madhura Bhave
+ * @author Andy Wilkinson
  */
-public class DeployableFileArtifactTests extends AbstractDeployableArtifactTests {
+class DeployableFileArtifactTests {
+
+	private static final byte[] CONTENT = "abc".getBytes();
 
 	@TempDir
 	File tempDir;
 
 	@Test
-	public void createWhenParentIsNotParentThrowsException() {
-		File parent = new File(this.tempDir, "parent");
-		File file = new File(this.tempDir, "test");
-		assertThatIllegalArgumentException().isThrownBy(() -> new DeployableFileArtifact(parent, file))
-			.withMessageContaining("is not a parent of");
+	void createWhenPropertiesIsNullUsesEmptyProperties() {
+		DeployableArtifact artifact = create("/foo", CONTENT, null, null);
+		assertThat(artifact.getProperties()).isNotNull().isEmpty();
 	}
 
-	@Override
-	protected AbstractDeployableArtifact create(String path, byte[] content, Map<String, String> properties,
-			Checksums checksums) throws IOException {
-		File file = new File(this.tempDir.getAbsolutePath() + File.separatorChar + path.replace("/", File.separator));
-		file.getParentFile().mkdirs();
-		FileCopyUtils.copy(content, file);
-		return new DeployableFileArtifact(this.tempDir, file, properties, checksums);
+	@Test
+	void createWhenChecksumIsNullCalculatesChecksums() {
+		DeployableArtifact artifact = create("/foo", CONTENT, null, null);
+		assertThat(artifact.getChecksums().getSha1()).isEqualTo("a9993e364706816aba3e25717850c26c9cd0d89d");
+		assertThat(artifact.getChecksums().getMd5()).isEqualTo("900150983cd24fb0d6963f7d28e17f72");
+	}
+
+	@Test
+	void getPropertiesReturnsProperties() {
+		Map<String, String> properties = Collections.singletonMap("foo", "bar");
+		DeployableArtifact artifact = create("/foo", CONTENT, properties, null);
+		assertThat(artifact.getProperties()).isEqualTo(properties);
+	}
+
+	@Test
+	void getChecksumReturnsChecksum() {
+		Checksums checksums = new Checksums("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+				"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+		DeployableArtifact artifact = create("/foo", CONTENT, null, checksums);
+		assertThat(artifact.getChecksums()).isEqualTo(checksums);
+	}
+
+	@Test
+	void getPathReturnsPath() {
+		DeployableArtifact artifact = create("/foo/bar", CONTENT, null, null);
+		assertThat(artifact.getPath()).isEqualTo("/foo/bar");
+	}
+
+	@Test
+	void getContentReturnsContent() throws Exception {
+		DeployableArtifact artifact = create("/foo", CONTENT, null, null);
+		assertThat(FileCopyUtils.copyToByteArray(artifact.getContent().getInputStream())).isEqualTo(CONTENT);
+	}
+
+	private DeployableArtifact create(String path, byte[] content, Map<String, String> properties,
+			Checksums checksums) {
+		File artifact = new File(this.tempDir, path);
+		artifact.getParentFile().mkdirs();
+		try {
+			Files.write(artifact.toPath(), content);
+		}
+		catch (IOException ex) {
+			throw new RuntimeException(ex);
+		}
+		return new DeployableFileArtifact(path, artifact, properties, checksums);
 	}
 
 }

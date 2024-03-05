@@ -19,13 +19,8 @@ package io.spring.github.actions.artifactoryaction.artifactory.payload;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.spring.github.actions.artifactoryaction.jackson.JsonIsoDateFormat;
 
@@ -56,19 +51,11 @@ public class BuildInfo {
 	@JsonProperty("url")
 	private final String buildUri;
 
-	@JsonProperty("properties")
-	@JsonInclude(Include.NON_NULL)
-	private final Map<String, String> properties;
-
 	@JsonProperty("modules")
 	private final List<BuildModule> modules;
 
-	@JsonCreator
-	public BuildInfo(@JsonProperty("name") String buildName, @JsonProperty("number") String buildNumber,
-			@JsonProperty("agent") ContinuousIntegrationAgent continuousIntegrationAgent,
-			@JsonProperty("buildAgent") BuildAgent buildAgent, @JsonProperty("started") Instant started,
-			@JsonProperty("url") String buildUri, @JsonProperty("properties") Map<String, String> properties,
-			@JsonProperty("modules") List<BuildModule> modules) {
+	public BuildInfo(String buildName, String buildNumber, ContinuousIntegrationAgent continuousIntegrationAgent,
+			BuildAgent buildAgent, Instant started, String buildUri, List<BuildModule> modules) {
 		Assert.hasText(buildName, "BuildName must not be empty");
 		Assert.hasText(buildNumber, "BuildNumber must not be empty");
 		this.buildName = buildName;
@@ -77,8 +64,6 @@ public class BuildInfo {
 		this.buildAgent = buildAgent;
 		this.started = (started != null) ? started : Instant.now();
 		this.buildUri = buildUri;
-		this.properties = (properties != null) ? Collections.unmodifiableMap(new LinkedHashMap<>(properties))
-				: Collections.emptyMap();
 		this.modules = (modules != null) ? Collections.unmodifiableList(new ArrayList<>(modules))
 				: Collections.emptyList();
 	}

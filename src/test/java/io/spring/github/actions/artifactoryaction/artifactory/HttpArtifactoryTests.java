@@ -17,10 +17,12 @@
 package io.spring.github.actions.artifactoryaction.artifactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.SocketException;
 import java.net.URI;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
@@ -33,7 +35,7 @@ import io.spring.github.actions.artifactoryaction.artifactory.Artifactory.BuildR
 import io.spring.github.actions.artifactoryaction.artifactory.payload.BuildArtifact;
 import io.spring.github.actions.artifactoryaction.artifactory.payload.BuildModule;
 import io.spring.github.actions.artifactoryaction.artifactory.payload.DeployableArtifact;
-import io.spring.github.actions.artifactoryaction.artifactory.payload.DeployableByteArrayArtifact;
+import io.spring.github.actions.artifactoryaction.artifactory.payload.DeployableFileArtifact;
 import io.spring.github.actions.artifactoryaction.util.ArtifactoryDateFormat;
 import org.json.JSONException;
 import org.junit.jupiter.api.AfterEach;
@@ -105,7 +107,7 @@ class HttpArtifactoryTests {
 
 	@Test
 	void deployUploadsTheDeployableArtifact() {
-		DeployableArtifact artifact = new DeployableByteArrayArtifact("/foo/bar.jar", BYTES);
+		DeployableArtifact artifact = artifact("/foo/bar.jar");
 		String url = "https://repo.example.com/libs-snapshot-local/foo/bar.jar";
 		this.server.expect(requestTo(url))
 			.andExpect(method(HttpMethod.PUT))
@@ -124,7 +126,7 @@ class HttpArtifactoryTests {
 		Map<String, String> properties = new HashMap<>();
 		properties.put("buildNumber", "1");
 		properties.put("revision", "123");
-		DeployableArtifact artifact = new DeployableByteArrayArtifact("/foo/bar.jar", BYTES, properties);
+		DeployableArtifact artifact = artifact("/foo/bar.jar", properties);
 		String url = "https://repo.example.com/libs-snapshot-local/foo/bar.jar;buildNumber=1;revision=123";
 		this.server.expect(requestTo(url)).andRespond(withSuccess());
 		this.artifactory.deploy("libs-snapshot-local", artifact);
@@ -133,7 +135,7 @@ class HttpArtifactoryTests {
 
 	@Test
 	void deployWhenChecksumMatchesDoesNotUpload() {
-		DeployableArtifact artifact = new DeployableByteArrayArtifact("/foo/bar.jar", BYTES);
+		DeployableArtifact artifact = artifact("/foo/bar.jar");
 		String url = "https://repo.example.com/libs-snapshot-local/foo/bar.jar";
 		this.server.expect(requestTo(url))
 			.andExpect(method(HttpMethod.PUT))
@@ -146,7 +148,7 @@ class HttpArtifactoryTests {
 
 	@Test
 	void deployWhenChecksumUploadFailsWithHttpClientErrorExceptionUploads() {
-		DeployableArtifact artifact = new DeployableByteArrayArtifact("/foo/bar.jar", BYTES);
+		DeployableArtifact artifact = artifact("/foo/bar.jar");
 		String url = "https://repo.example.com/libs-snapshot-local/foo/bar.jar";
 		this.server.expect(requestTo(url))
 			.andExpect(method(HttpMethod.PUT))
@@ -163,7 +165,7 @@ class HttpArtifactoryTests {
 
 	@Test
 	void deployWhenSmallFileDoesNotUseChecksum() {
-		DeployableArtifact artifact = new DeployableByteArrayArtifact("/foo/bar.jar", "foo".getBytes());
+		DeployableArtifact artifact = artifact("/foo/bar.jar", "small".getBytes());
 		String url = "https://repo.example.com/libs-snapshot-local/foo/bar.jar";
 		this.server.expect(requestTo(url))
 			.andExpect(method(HttpMethod.PUT))
@@ -175,7 +177,7 @@ class HttpArtifactoryTests {
 
 	@Test
 	void deployWhenNoChecksumUploadOptionFileDoesNotUseChecksum() {
-		DeployableArtifact artifact = new DeployableByteArrayArtifact("/foo/bar.jar", BYTES);
+		DeployableArtifact artifact = artifact("/foo/bar.jar");
 		String url = "https://repo.example.com/libs-snapshot-local/foo/bar.jar";
 		this.server.expect(requestTo(url))
 			.andExpect(method(HttpMethod.PUT))
@@ -225,7 +227,7 @@ class HttpArtifactoryTests {
 	}
 
 	private void deployWhenFlaky(boolean fail, ResponseCreator failResponse) {
-		DeployableArtifact artifact = new DeployableByteArrayArtifact("/foo/bar.jar", BYTES);
+		DeployableArtifact artifact = artifact("/foo/bar.jar");
 		String url = "https://repo.example.com/libs-snapshot-local/foo/bar.jar";
 		try {
 			this.server.expect(requestTo(url))
@@ -303,6 +305,30 @@ class HttpArtifactoryTests {
 
 	private Resource getResource(String path) {
 		return new ClassPathResource(path, getClass());
+	}
+
+	private DeployableArtifact artifact(String path) {
+		return artifact(path, BYTES, null);
+	}
+
+	private DeployableArtifact artifact(String path, byte[] bytes) {
+		return artifact(path, bytes, null);
+	}
+
+	private DeployableArtifact artifact(String path, Map<String, String> properties) {
+		return artifact(path, BYTES, properties);
+	}
+
+	private DeployableArtifact artifact(String path, byte[] bytes, Map<String, String> properties) {
+		File artifact = new File(this.tempDir, path);
+		artifact.getParentFile().mkdirs();
+		try {
+			Files.write(artifact.toPath(), bytes);
+		}
+		catch (IOException ex) {
+			throw new RuntimeException(ex);
+		}
+		return new DeployableFileArtifact(path, artifact, properties, null);
 	}
 
 }

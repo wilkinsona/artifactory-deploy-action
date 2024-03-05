@@ -31,10 +31,11 @@ import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException
  *
  * @author Phillip Webb
  * @author Madhura Bhave
+ * @author Andy Wilkinson
  */
 @JsonTest
 @ActiveProfiles("test")
-public class BuildArtifactTests {
+class BuildArtifactTests {
 
 	private static final String TYPE = "jar";
 
@@ -45,34 +46,34 @@ public class BuildArtifactTests {
 	private static final String NAME = "foo.jar";
 
 	@Autowired
-	public JacksonTester<BuildArtifact> json;
+	JacksonTester<BuildArtifact> json;
 
 	@Test
-	public void createWhenTypeIsEmptyThrowsException() {
+	void createWhenTypeIsEmptyThrowsException() {
 		assertThatIllegalArgumentException().isThrownBy(() -> new BuildArtifact("", SHA1, MD5, NAME))
 			.withMessage("Type must not be empty");
 	}
 
 	@Test
-	public void createWhenSha1IsEmptyThrowsException() {
+	void createWhenSha1IsEmptyThrowsException() {
 		assertThatIllegalArgumentException().isThrownBy(() -> new BuildArtifact(TYPE, "", MD5, NAME))
 			.withMessage("SHA1 must not be empty");
 	}
 
 	@Test
-	public void createWhenMd5IsEmptyThrowsException() {
+	void createWhenMd5IsEmptyThrowsException() {
 		assertThatIllegalArgumentException().isThrownBy(() -> new BuildArtifact(TYPE, SHA1, "", NAME))
 			.withMessage("MD5 must not be empty");
 	}
 
 	@Test
-	public void createWhenNameIsEmptyThrowsException() {
+	void createWhenNameIsEmptyThrowsException() {
 		assertThatIllegalArgumentException().isThrownBy(() -> new BuildArtifact(TYPE, SHA1, MD5, ""))
 			.withMessage("Name must not be empty");
 	}
 
 	@Test
-	public void writeSerializesJson() throws Exception {
+	void writeSerializesJson() throws Exception {
 		BuildArtifact artifact = new BuildArtifact(TYPE, SHA1, MD5, NAME);
 		assertThat(this.json.write(artifact)).isEqualToJson("build-artifact.json");
 	}

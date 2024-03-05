@@ -16,14 +16,18 @@
 
 package io.spring.github.actions.artifactoryaction;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
 import io.spring.github.actions.artifactoryaction.artifactory.payload.BuildArtifact;
 import io.spring.github.actions.artifactoryaction.artifactory.payload.BuildModule;
 import io.spring.github.actions.artifactoryaction.artifactory.payload.DeployableArtifact;
-import io.spring.github.actions.artifactoryaction.artifactory.payload.DeployableByteArrayArtifact;
+import io.spring.github.actions.artifactoryaction.artifactory.payload.DeployableFileArtifact;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -32,12 +36,14 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author Phillip Webb
  * @author Madhura Bhave
+ * @author Andy Wilkinson
  */
 class MavenBuildModulesGeneratorTests {
 
-	private static final byte[] NO_CONTENT = {};
-
 	private MavenBuildModulesGenerator generator = new MavenBuildModulesGenerator();
+
+	@TempDir
+	File tempDir;
 
 	@Test
 	void getBuildModulesReturnsBuildModules() {
@@ -82,8 +88,16 @@ class MavenBuildModulesGeneratorTests {
 		assertThat(buildModules).isEmpty();
 	}
 
-	private DeployableByteArrayArtifact artifact(String path) {
-		return new DeployableByteArrayArtifact(path, NO_CONTENT);
+	private DeployableArtifact artifact(String path) {
+		File artifact = new File(this.tempDir, path);
+		artifact.getParentFile().mkdirs();
+		try {
+			Files.createFile(artifact.toPath());
+		}
+		catch (IOException ex) {
+			throw new RuntimeException(ex);
+		}
+		return new DeployableFileArtifact(path, artifact, null, null);
 	}
 
 }
