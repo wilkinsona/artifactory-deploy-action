@@ -21,10 +21,8 @@ import java.net.URI;
 import java.time.Duration;
 import java.util.Map;
 
-import io.spring.github.actions.artifactoryaction.artifactory.payload.BuildAgent;
 import io.spring.github.actions.artifactoryaction.artifactory.payload.BuildInfo;
 import io.spring.github.actions.artifactoryaction.artifactory.payload.Checksums;
-import io.spring.github.actions.artifactoryaction.artifactory.payload.ContinuousIntegrationAgent;
 import io.spring.github.actions.artifactoryaction.artifactory.payload.DeployableArtifact;
 import io.spring.github.actions.artifactoryaction.system.ConsoleLogger;
 import org.slf4j.Logger;
@@ -196,9 +194,8 @@ class HttpArtifactory implements Artifactory {
 		logger.info("Publishing build info to {}", uri);
 		RequestEntity<BuildInfo> request = RequestEntity.put(uri)
 			.contentType(MediaType.APPLICATION_JSON)
-			.body(new BuildInfo(buildName, Integer.toString(buildRun.number()), new ContinuousIntegrationAgent(),
-					new BuildAgent(), buildRun.started(), (buildRun.uri() != null) ? buildRun.uri().toString() : null,
-					buildRun.modules()));
+			.body(new BuildInfo(buildName, Integer.toString(buildRun.number()), buildRun.started(),
+					(buildRun.uri() != null) ? buildRun.uri().toString() : null, buildRun.modules()));
 		ResponseEntity<Void> exchange = this.restTemplate.exchange(request, Void.class);
 		exchange.getBody();
 	}

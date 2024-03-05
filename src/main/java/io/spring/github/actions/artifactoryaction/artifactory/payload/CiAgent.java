@@ -16,8 +16,6 @@
 
 package io.spring.github.actions.artifactoryaction.artifactory.payload;
 
-import java.util.Objects;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
@@ -26,58 +24,23 @@ import org.springframework.util.Assert;
 /**
  * The CI agent information included in {@link BuildInfo}.
  *
+ * @param name the name of the CI agent
+ * @param version the version of the CI agent
  * @author Phillip Webb
  * @author Madhura Bhave
  * @author Andy Wilkinson
  */
 @JsonInclude(Include.NON_NULL)
-public class ContinuousIntegrationAgent {
+public record CiAgent(String name, String version) {
 
-	private final String name;
-
-	private final String version;
-
-	public ContinuousIntegrationAgent() {
+	public CiAgent() {
 		this("GitHub Actions", null);
 	}
 
-	private ContinuousIntegrationAgent(String name, String version) {
+	public CiAgent(String name, String version) {
 		Assert.hasText(name, "Name must not be empty");
 		this.name = name;
 		this.version = version;
-	}
-
-	public String getName() {
-		return this.name;
-	}
-
-	public String getVersion() {
-		return this.version;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (obj == null) {
-			return false;
-		}
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
-		ContinuousIntegrationAgent other = (ContinuousIntegrationAgent) obj;
-		return Objects.equals(this.name, other.name) && Objects.equals(this.version, other.version);
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(this.name, this.version);
-	}
-
-	@Override
-	public String toString() {
-		return this.name + ":" + ((this.version != null) ? this.version : "unknown");
 	}
 
 }

@@ -22,79 +22,44 @@ import java.util.Collections;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 import org.springframework.util.Assert;
 
 /**
- * Build information for artifactory.
+ * Build information for Artifactory.
  *
+ * @param name name of the build
+ * @param number number of the build
+ * @param agent CI server that performed the build
+ * @param buildAgent Agent that deployed the build
+ * @param started Instant at which the build start
+ * @param url URL of the build on the CI server
+ * @param modules modules produced by the build
  * @author Phillip Webb
  * @author Madhura Bhave
+ * @author Andy Wilkinson
  */
+public record BuildInfo(
+		String name, String number, CiAgent agent, BuildAgent buildAgent, @JsonFormat(shape = JsonFormat.Shape.STRING,
+				pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX", timezone = "UTC") Instant started,
+		String url, List<BuildModule> modules) {
 
-public class BuildInfo {
+	public BuildInfo(String name, String number, Instant started, String url, List<BuildModule> modules) {
+		this(name, number, new CiAgent(), new BuildAgent(), started, url, modules);
+	}
 
-	@JsonProperty("name")
-	private final String buildName;
-
-	@JsonProperty("number")
-	private final String buildNumber;
-
-	@JsonProperty("agent")
-	private final ContinuousIntegrationAgent continuousIntegrationAgent;
-
-	private final BuildAgent buildAgent;
-
-	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX", timezone = "UTC")
-	private final Instant started;
-
-	@JsonProperty("url")
-	private final String buildUri;
-
-	@JsonProperty("modules")
-	private final List<BuildModule> modules;
-
-	public BuildInfo(String buildName, String buildNumber, ContinuousIntegrationAgent continuousIntegrationAgent,
-			BuildAgent buildAgent, Instant started, String buildUri, List<BuildModule> modules) {
-		Assert.hasText(buildName, "BuildName must not be empty");
-		Assert.hasText(buildNumber, "BuildNumber must not be empty");
-		this.buildName = buildName;
-		this.buildNumber = buildNumber;
-		this.continuousIntegrationAgent = continuousIntegrationAgent;
+	public BuildInfo(String name, String number, CiAgent agent, BuildAgent buildAgent, Instant started, String url,
+			List<BuildModule> modules) {
+		Assert.hasText(name, "Name must not be empty");
+		Assert.hasText(number, "Number must not be empty");
+		this.name = name;
+		this.number = number;
+		this.agent = agent;
 		this.buildAgent = buildAgent;
 		this.started = (started != null) ? started : Instant.now();
-		this.buildUri = buildUri;
+		this.url = url;
 		this.modules = (modules != null) ? Collections.unmodifiableList(new ArrayList<>(modules))
 				: Collections.emptyList();
-	}
-
-	public String getBuildName() {
-		return this.buildName;
-	}
-
-	public String getBuildNumber() {
-		return this.buildNumber;
-	}
-
-	public ContinuousIntegrationAgent getContinuousIntegrationAgent() {
-		return this.continuousIntegrationAgent;
-	}
-
-	public BuildAgent getBuildAgent() {
-		return this.buildAgent;
-	}
-
-	public Instant getStarted() {
-		return this.started;
-	}
-
-	public String getBuildUri() {
-		return this.buildUri;
-	}
-
-	public List<BuildModule> getModules() {
-		return this.modules;
 	}
 
 }

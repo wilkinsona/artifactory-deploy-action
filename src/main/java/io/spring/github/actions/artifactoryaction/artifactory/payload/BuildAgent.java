@@ -16,54 +16,21 @@
 
 package io.spring.github.actions.artifactoryaction.artifactory.payload;
 
-import java.util.Objects;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 /**
  * The build agent information included in {@link BuildInfo}.
  *
+ * @param name the name of the build agent
+ * @param version the version of the build agent
  * @author Andy Wilkinson
  */
 @JsonInclude(Include.NON_NULL)
-public class BuildAgent {
+public record BuildAgent(String name, String version) {
 
-	private final String name = "Artifactory Action";
-
-	private final String version = BuildAgent.class.getPackage().getImplementationVersion();
-
-	public String getName() {
-		return this.name;
-	}
-
-	public String getVersion() {
-		return this.version;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (obj == null) {
-			return false;
-		}
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
-		BuildAgent other = (BuildAgent) obj;
-		return Objects.equals(this.name, other.name) && Objects.equals(this.version, other.version);
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(this.name, this.version);
-	}
-
-	@Override
-	public String toString() {
-		return this.name + ":" + ((this.version != null) ? this.version : "unknown");
+	public BuildAgent() {
+		this("Artifactory Action", BuildAgent.class.getPackage().getImplementationVersion());
 	}
 
 }
